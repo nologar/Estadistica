@@ -1,0 +1,53 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-11-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Realizar gr´aficos que describan la serie original. Comprobar mediante
+alg´un m´etodo gr´afico si existe estacionalidad anual.
+
+
+2. ¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo
+lineal y un filtro de media m´ovil (teniendo cuidado con los valores NA).
+
+
+3. Analizar la varianza: ¿parece ser constante?
+
+
+4. Antes de continuar con el an´alisis, transformar la serie temporal en
+una serie regular con una frecuencia fija (el problema es que distintos
+a˜nos tienen diferentes n´umeros de d´ıas). Para ello, agregamos la serie
+temporal en 36 puntos por a˜no, promediando los d´ıas de cada mes en
+tres periodos de aproximadamente 10 d´ıas. Es decir, para cada mes se
+promedian (con la media) las observaciones en tres periodos: desde el 1
+hasta el 10, desde el 11 hasta el 20, y desde el 21 hasta el final del mes
+(este ´ultimo periodo puede tener una longitud variable). Las funciones
+summarise en combinaci´on con group by del paquete dplyr pueden
+ser ´utiles para esta operaci´on.
+
+
+5. Descomponer la serie en tendencia, estacionalidad y residuos. Estudiar
+los residuos y la tendencia.
+
+
+6. ¿Hay evidencia del cambio clim´atico en estas observaciones? Es decir,
+¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando
+otros m´etodos.
+
+
+7. Considerando la informaci´on hasta el a˜no 2010, construir un modelo
+predictivo para la temperatura en la d´ecada 2010-2020. Contrastar la
+predicci´on obtenida con los datos observados. Comparar distintos modelos predictivos y evaluarlos en cuanto a su capacidad para predecir
+la temperatura de la d´ecada 2010-2020.
+
+
+8. Proporcionar una estimaci´on de la temperatura hasta el a˜no 2030. En
+particular, proporcionar una estimaci´on de la temperatura para todos
+los meses del a˜no 2030. Utilizar el mejor modelo obtenido en el punto
+anterior. Intentar tambi´en proporcionar una estimaci´on de la confianza
+o incertidumbre de las predicciones.
