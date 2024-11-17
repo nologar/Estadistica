@@ -8,8 +8,115 @@ date: "2024-11-13"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-1. Realizar gr´aficos que describan la serie original. Comprobar mediante
-alg´un m´etodo gr´afico si existe estacionalidad anual.
+En primer lugar, vamos a importar los datos.
+
+```{r}
+
+df<- read.csv("./TG_STAID000455.txt", skip = 20, header = TRUE, sep = ",")
+library(lubridate)
+df$DATE<- ymd(df$DATE)
+```
+
+1. Realizar gráficos que describan la serie original. Comprobar mediante
+algún método gráfico si existe estacionalidad anual.
+
+Primero vamos a visualizar la serie temporal.
+
+```{r}
+
+# Gráfico de líneas para la serie temporal
+plot(df$DATE, df$TG, type = "l", col = "blue", 
+     xlab = "Fecha", ylab = "Temperatura Media (TG)", 
+     main = "Evolución de la Temperatura Media")
+
+
+```
+Notamos que esta visualización se debe a los datos perdidos que tenemos en la variable TG. Sabemos que estos están etiquetados con un 9 en la variable Q_TG.
+
+```{r}
+
+head(df[df$Q_TG== 9,])
+
+```
+
+Notamos que los valores perdidos están asociados al valor -9999. Vamos a cambiarlo para que tengan el valor asociado NA.
+
+```{r}
+
+df$TG[df$Q_TG== 9]=NA
+head(df[df$Q_TG== 9,])
+
+```
+
+Ahora representamos la serie temporal excluyendo los NA's.
+
+```{r}
+
+library(dplyr)
+
+df_clean <- df %>% na.omit()
+
+plot(df_clean$DATE, df_clean$TG, type = "l", col = "blue", 
+     xlab = "Fecha", ylab = "Temperatura Media (TG)", 
+     main = "Evolución de la Temperatura Media")
+
+
+
+```
+
+También podemos hacer un histograma para analizar la distribución de las temperaturas.
+
+```{r}
+
+# Histograma de la temperatura media
+hist(df_clean$TG, breaks = 20, col = "lightblue", 
+     xlab = "Temperatura Media (TG)", 
+     main = "Distribución de la Temperatura Media")
+
+
+```
+
+También podemos analizar la dispersión y los posibles outliers con un boxplot.
+
+```{r}
+
+# Boxplot de la temperatura media
+boxplot(df_clean$TG, horizontal = TRUE, col = "orange", 
+        main = "Dispersión de la Temperatura Media", 
+        xlab = "Temperatura Media (TG)")
+
+
+```
+Se pueden observar muchos outliers. Seguramente, la mayoría de ellos serán aquellos valores etiquetados  con un 1 en la variable Q_TG.
+
+```{r}
+
+df[df$Q_TG== 1,]
+
+```
+
+Notamos que efectivamente todos estos valores están fuera de los bigotes del boxplot.
+
+Ahora veremos mediante algún método gráfico si existe estacionalidad anual.
+
+```{r}
+
+df_ts <- ts(df$TG, frequency = 365, start = c(1941, 8))
+
+
+acf(df_ts, main = "ACF de la Temperatura Media", lag.max = 365 * 10, na.action = na.pass)
+
+
+# Corregir per avore de tots els anys.
+```
+
+
+Este gráfico de autocorrelación nos muestra como está correlacionada la serie temporal consigo misma en diferentes lags de tiempo. Como tenemos datos diarios hemos utilizado lags diarios. Como queremos ver si hay estacionalidad anual, cada unidad del lag representa un año. Por tanto, como podemos observar, hay una clara estacionalidad anual. Esto es de esperar pues estamos hablando de temperatura. Por eso, la autocorrelación aumenta en aquellos puntos en los que la estación sea la misma en distintos años, y disminuye cuando las estaciones sean muy diferentes en temperatura (por ejemplo verano e invierno). Solamente hemos mostrado los diez primeros años para que la visualización sea mejor, pero es suficiente para afirmar que existe estacionalidad en la serie.
+
+
+
+
+
 
 
 2. ¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo
