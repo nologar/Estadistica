@@ -107,8 +107,9 @@ df_ts <- ts(df$TG, frequency = 365, start = c(1941, 8))
 acf(df_ts, main = "ACF de la Temperatura Media", lag.max = 365 * 10, na.action = na.pass)
 
 
-# Corregir per avore de tots els anys.
 ```
+
+
 
 
 Este gráfico de autocorrelación nos muestra como está correlacionada la serie temporal consigo misma en diferentes lags de tiempo. Como tenemos datos diarios hemos utilizado lags diarios. Como queremos ver si hay estacionalidad anual, cada unidad del lag representa un año. Por tanto, como podemos observar, hay una clara estacionalidad anual. Esto es de esperar pues estamos hablando de temperatura. Por eso, la autocorrelación aumenta en aquellos puntos en los que la estación sea la misma en distintos años, y disminuye cuando las estaciones sean muy diferentes en temperatura (por ejemplo verano e invierno). Solamente hemos mostrado los diez primeros años para que la visualización sea mejor, pero es suficiente para afirmar que existe estacionalidad en la serie.
@@ -117,25 +118,49 @@ Este gráfico de autocorrelación nos muestra como está correlacionada la serie
 
 
 
-
-
 2. ¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo
-lineal y un filtro de media m´ovil (teniendo cuidado con los valores NA).
+lineal y un filtro de media móvil (teniendo cuidado con los valores NA).
+
 
 
 3. Analizar la varianza: ¿parece ser constante?
 
 
-4. Antes de continuar con el an´alisis, transformar la serie temporal en
+
+
+4. Antes de continuar con el análisis, transformar la serie temporal en
 una serie regular con una frecuencia fija (el problema es que distintos
-a˜nos tienen diferentes n´umeros de d´ıas). Para ello, agregamos la serie
-temporal en 36 puntos por a˜no, promediando los d´ıas de cada mes en
-tres periodos de aproximadamente 10 d´ıas. Es decir, para cada mes se
+años tienen diferentes números de días). Para ello, agregamos la serie
+temporal en 36 puntos por año, promediando los días de cada mes en
+tres periodos de aproximadamente 10 días. Es decir, para cada mes se
 promedian (con la media) las observaciones en tres periodos: desde el 1
 hasta el 10, desde el 11 hasta el 20, y desde el 21 hasta el final del mes
-(este ´ultimo periodo puede tener una longitud variable). Las funciones
-summarise en combinaci´on con group by del paquete dplyr pueden
-ser ´utiles para esta operaci´on.
+(este último periodo puede tener una longitud variable). Las funciones
+summarise en combinación con group by del paquete dplyr pueden
+ser útiles para esta operación.
+
+Primero, crearemos un nuevo DataFrame con los promedios calculados de cada periodo tal como indica el enunciado.
+
+```{r}
+
+df_avg <- df %>% mutate(day = day(DATE), month= month(DATE), year = year(DATE), period = ifelse(day<=10,'1-10',ifelse(day<=20,'11-20','21-fin'))) %>% # Creamos nuevas columnas con el día, mes, año y los periodos de cada mes
+  group_by(year,month,period) %>% # Agrupamos por año, mes y periodo
+  summarise(avg_TG = mean(TG, na.rm = TRUE)) %>% # Calculamos el promedio para cada periodo
+  ungroup()
+  
+print(df_avg) 
+
+```
+
+A continuación, creamos una serie regular usando los promedios calculados. Como tenemos tres periodos por mes y cada año tiene doce meses tendremos una serie con frecuencia fija 36.
+
+```{r}
+
+df_avg_ts <- ts(df_avg$avg_TG, start = c(min(df_avg$year), min(df_avg$month)), frequency = 36)
+
+plot(df_avg_ts, main = "Serie Temporal Promediada", ylab = "Temperatura Media Promediada", xlab = "Tiempo")
+
+```
 
 
 5. Descomponer la serie en tendencia, estacionalidad y residuos. Estudiar
