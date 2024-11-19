@@ -200,6 +200,8 @@ print(df_avg)
 
 ```
 
+Como podemos observar, hay muchos registros que tienen en la columna 'avg_TG' el término NaN. Esto se debe a que en cada uno de los respectivos periodos solo había valores faltantes NA, por eso al calcular el promedio de los valores faltantes el resultado és NaN ('not a number').
+
 A continuación, creamos una serie regular usando los promedios calculados. Como tenemos tres periodos por mes y cada año tiene doce meses tendremos una serie con frecuencia fija 36.
 
 ```{r}
@@ -214,6 +216,46 @@ plot(df_avg_ts, main = "Serie Temporal Promediada", ylab = "Temperatura Media Pr
 5. Descomponer la serie en tendencia, estacionalidad y residuos. Estudiar
 los residuos y la tendencia.
 
+Como hemos comentado antes, nuestro DataFrame df_avg tenía valores de tipo NaN, por tanto, nuestra serie temporal df_avg_ts también los tiene. Además, se puede observar en df_avg que estos valores faltantes están muy juntos. En 1942, tenemos todos los periodos desde el segundo mes hasta el octavo lleno de valores faltantes. Además, desde el décimo mes hasta el fin de año también tenemos todos los periodos llenos de NaN. Esto provoca que prácticamente todo el año 1942 esté sin registros. Esto puede suponer un problema para este ejercicio, ya que queremos analizar la serie descomponiéndola en tendencia, estacionalidad y residuos, y para esta tarea necesitamos tener una serie continua. Para solventar este problema pensamos que la mejor solución es la imputación, ya que con la eliminación perderíamos casi todos los registros de un año entero. Para realizar la imputación, utilizaremos la función 'na.seasplit' de la librería 'imputeTS', que basa la imputación en patrones estacionales. Como hemos probado que nuestra serie tiene estacionalidad anual, esta función imputa los valores faltantes basándose en los datos de otros años en los mismos meses o periodos.  
+
+
+```{r}
+
+require(imputeTS)
+
+# Imputar valores faltantes respetando estacionalidad
+df_avg_ts_clean <- na_seasplit(df_avg_ts)
+
+# Descomponemos la serie en tendencia, estacionalidad y residuos.
+
+serie_desc <- decompose(df_avg_ts_clean)
+
+plot(serie_desc)
+```
+Primero vamos a analizar los residuos. Los residuos deberían ser cercanos a ruido blanco, es decir, no deberían mostrar patrones claros ni autocorrelación significativa. 
+
+```{r}
+
+# Graficar los residuos
+plot(serie_desc$random, main = "Residuos de la serie temporal", ylab = "Residuos", xlab = "Tiempo")
+
+# Autocorrelación de los residuos
+acf(na.omit(serie_desc$random), main = "ACF de los residuos")
+
+```
+
+Notamos que a simple vista los residuos sí que se asemejan a ruido blanco. Para estar seguros, hemos echo un gráfico de autocorrelación. Como era de esperar no parece haber una autocorrelación significativa en los residuos.
+
+A continuación analizaremos la tendencia.
+
+```{r}
+
+# Graficar la tendencia
+plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendencia", xlab = "Tiempo")
+
+```
+
+Se puede observar que la serie tiene una clara tendencia creciente.
 
 6. ¿Hay evidencia del cambio clim´atico en estas observaciones? Es decir,
 ¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando
