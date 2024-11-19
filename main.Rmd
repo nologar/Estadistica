@@ -120,11 +120,59 @@ Este gráfico de autocorrelación nos muestra como está correlacionada la serie
 
 2. ¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo
 lineal y un filtro de media móvil (teniendo cuidado con los valores NA).
+```{r}
+library(zoo)
+
+# Cálculo de la media móvil simple
+df_clean$TG_ma <- rollmean(df_clean$TG, k = 365, fill = NA)
+
+# Ajuste de un modelo lineal para la tendencia
+modelo_lineal <- lm(TG ~ as.numeric(DATE), data = df_clean)
+
+# Gráfico de la serie original, la media móvil y la tendencia
+plot(df_clean$DATE, df_clean$TG, type = "l", col = "blue", 
+     xlab = "Fecha", ylab = "Temperatura Media (TG)", 
+     main = "Evolución de la Temperatura Media")
+lines(df_clean$DATE, df_clean$TG_ma, col = "red", lwd = 2)  # Media móvil
+abline(modelo_lineal, col = "green", lwd = 2)  # Línea de tendencia del modelo lineal
+
+# Leyenda para identificar las líneas
+legend("topright", legend = c("Serie Original", "Media Móvil (k=365)", "Línea de Tendencia (Modelo Lineal)"),
+       col = c("blue", "red", "green"), lty = 1)
 
 
+```
+
+Al contar ahora con la media móvil y el modelo lineal podemos ver que existe una tendencia al alza en los referido a la temperatura media, que va aumentando paulatinamente con los años. Esto no se podía ver en la señal original dado que las distintas estaciones enmascaran esta tendencia.
+
+```{r}
+summary(modelo_lineal)
+```
+Aquí podemos ver algunos de los parámetros más reelevantes del modelo lineal generado.
+Los residuos por ejemplo nos indican que existe una gran variedad, lo que se puede deber a la tendencia al alza de las temperaturas a lo largo de los años. Además también podemos ver los parámetros estimados del modelo.
 
 3. Analizar la varianza: ¿parece ser constante?
 
+```{r}
+# Como hemos analizado esa estacionalidad anual vamos a relacionar esto con la varianza analizándola de manera anual
+df_clean$year <- format(df_clean$DATE, "%Y")
+
+# Calcular varianza por año
+var_por_año <- tapply(df_clean$TG, df_clean$year, var)
+# Definimos los años 
+years<-unique(df_clean$year)
+plot(years,var_por_año, type = "b", col = "blue", 
+     xlab = "Año", ylab = "Varianza de TG", 
+     main = "Varianza de la Temperatura Media por Año")
+```
+
+Como vemos la varianza de los datos van variando sin aparente relación. No obstante, vamos a calcular la correlación para estar 100% seguros de esto.
+```{r}
+# Graficar la autocorrelación de las varianzas anuales
+acf(var_por_año, main = "Autocorrelación de las Varianzas Anuales de TG")
+
+```
+Como vemos aquí se observan algunos picos aislados pero por lo general el valor de la correlación es cero, lo que es consistente con lo mencionado arriba.
 
 
 
