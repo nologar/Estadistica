@@ -260,7 +260,11 @@ Se puede observar que la serie tiene una clara tendencia creciente.
 6. ¿Hay evidencia del cambio clim´atico en estas observaciones? Es decir,
 ¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando
 otros m´etodos.
-
+```{r}
+# Graficar la tendencia
+plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendencia", xlab = "Tiempo")
+```
+Con el gráfico de la tendencia podemos observar el efecto del cambio climático, ya que muestra una tendencia ascendente claramente definida. Esto indica que, desde 1940 hasta 2024, ha habido un cambio significativo en la temperatura de aproximadamente 4 grados Celsius (40 décimas de grado Celsius). Esta variación refleja un patrón que es consistente con el calentamiento global, caracterizado por un aumento progresivo de las temperaturas a lo largo de las últimas décadas.
 
 7. Considerando la informaci´on hasta el a˜no 2010, construir un modelo
 predictivo para la temperatura en la d´ecada 2010-2020. Contrastar la
