@@ -197,7 +197,7 @@ df_avg <- df %>% mutate(day = day(DATE), month= month(DATE), year = year(DATE), 
   ungroup()
   
 print(df_avg) 
-
+ 
 ```
 
 Como podemos observar, hay muchos registros que tienen en la columna 'avg_TG' el término NaN. Esto se debe a que en cada uno de los respectivos periodos solo había valores faltantes NA, por eso al calcular el promedio de los valores faltantes el resultado és NaN ('not a number').
@@ -266,6 +266,30 @@ otros m´etodos.
 predictivo para la temperatura en la d´ecada 2010-2020. Contrastar la
 predicci´on obtenida con los datos observados. Comparar distintos modelos predictivos y evaluarlos en cuanto a su capacidad para predecir
 la temperatura de la d´ecada 2010-2020.
+
+El modelo más simple que pueda considerarse se basa en descomponer la serie temporal en tendencia, estacionalidad y ruido, hacer una predición de la tendencia mediante un modelo lineal y después añadir la estacionalidad correspondiente y un ruido aleatorio. 
+
+Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temporal que calcula las medias en intervalos de ~10 días
+
+Consideramos en primer lugar el dataframe que contiene la descomposición hasta el año 2010:
+
+Como la la tendencia de la serie es calculada a partir de enero de 1941 entonces sabemos que el número de entradas que hay hasta enero de 2010 serán $(3\cdot 12) \cdot (2010-1941+1)$
+```{r}
+times_vec <- seq(1940,2010-1/36, by = 1/36)
+
+df_hasta_2010<- data.frame( time = times_vec, trend = serie_desc$trend[1:(36* (2010-1941+1))] , seasonal = serie_desc$seasonal[1:(36* (2010-1941+1))], random = serie_desc$random[1:(36* (2010-1941+1))])
+
+par(mfrow = c(3,1))
+plot( df_hasta_2010$time,  df_hasta_2010$trend, type = "l", main = "Tendencia hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
+plot( times_vec,  estacion_hasta_2010, type = "l", main = "Estacionalidad hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
+plot( times_vec,  ruido_hasta_2010, type = "l", main = "Ruido hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
+```
+Procedemos ahora con el estudio previamente explicado: generamos un modelo lineal para la tendencia:
+
+```{r}
+modelo_tendencia<- lm()
+```
+
 
 
 8. Proporcionar una estimaci´on de la temperatura hasta el a˜no 2030. En
