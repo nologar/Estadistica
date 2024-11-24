@@ -265,6 +265,22 @@ otros m´etodos.
 plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendencia", xlab = "Tiempo")
 ```
 Con el gráfico de la tendencia podemos observar el efecto del cambio climático, ya que muestra una tendencia ascendente claramente definida. Esto indica que, desde 1940 hasta 2024, ha habido un cambio significativo en la temperatura de aproximadamente 4 grados Celsius (40 décimas de grado Celsius). Esta variación refleja un patrón que es consistente con el calentamiento global, caracterizado por un aumento progresivo de las temperaturas a lo largo de las últimas décadas.
+Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
+
+```{r}
+# Promedio de temperatura en los primeros y últimos 10 años
+primeros_10 <- df_clean %>% filter(year_diff <= 10)
+ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
+
+promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
+promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
+
+# Mostrar la diferencia
+cat("Temperatura promedio primeros 10 años en (décimas de grado Celsius):", promedio_primero, "\n")
+cat("Temperatura promedio últimos 10 años en (décimas de grado Celsius):", promedio_ultimo, "\n")
+cat("Diferencia de temperatura media en (décimas de grado Celsius):", promedio_ultimo - promedio_primero, "\n")
+```
+
 
 7. Considerando la informaci´on hasta el a˜no 2010, construir un modelo
 predictivo para la temperatura en la d´ecada 2010-2020. Contrastar la
