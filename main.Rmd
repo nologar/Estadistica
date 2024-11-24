@@ -372,7 +372,7 @@ trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(model
 
 seasonal_guess_1_desde_2009 <- rep(season_anual_1, times=20)[1: length(time_desde_2009)] 
 
-ts_guess_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_1_desde_2009
+ts_guess_1_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_1_desde_2009
 
 ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
 
@@ -384,7 +384,7 @@ par(mfrow = c(3,1))
 
 plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
-plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_1_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 
 
 ```
@@ -406,7 +406,7 @@ trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(model
 
 seasonal_guess_2_desde_2009 <- rep(season_anual_2, times=20)[1: length(time_desde_2009)]
 
-ts_guess_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009
+ts_guess_2_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009
 
 ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
 
@@ -418,23 +418,86 @@ par(mfrow = c(3,1))
 
 plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
-plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_2_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 
 
 ```
 
+A simple vista es difícil evaluar que modelo ajusta mejor a la realidad, por esto, calculamos los residuos al cuadrado:
 
+```{r}
+Residue_1 <- sum(abs( ts_guess_1_desde_2009 - ts_original_desde_2009 ))
+Residue_1
+Residue_2 <- sum(abs( ts_guess_2_desde_2009 - ts_original_desde_2009 ))
+Residue_2
+```
 
-
-
-Vemos que la estacionalidad que hemos predicho se ajusta correctamente a la estacionalidad original.
+Vemos que el segundo modelo muestra un ajuste más preciso. Por esto, consideraremos a partir de ahora la versión "2" de la estacionalidad.
 Por último, generamos un vector aleatorio con distribución normal centrada en 0 y que tenga como varianza la varianza del elemento aleatorio de la serie temporal.
+Esto lo podemos hacer de varias maneras. La más sencilla es:
 
-Notamos que desde el 2010-01-01 hasta el fin de la toma de medidas ( 2024-01 incluido ) transcurren un total de
+```{r}
+random_guess <- rnorm( length( ts_original_desde_2009  ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))
 
-$(2023 - 2010 - 1)*12 + 1 = 145 $ meses, y por tanto, se corresponde a $145 * 3 = $ observaciones.
+ts_guess_2_desde_2009_con_random <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess
 
-Por lo tanto, el vector que tendremos que generar tendra está medida.
+par(mfrow = c(3,1))
+
+plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "Predicción sin ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+
+#Calculando los residuos obtenemos un valor de 
+Residue_3 <- sum( abs( ts_guess_2_desde_2009_con_random - ts_original_desde_2009) )
+Residue_3
+```
+Para asegurarnos que el resultado no depende de una observación puntual del vector aleatorio podemos repetir el proceso y calcular los residuos $n$ veces para posteriormente calcular la media de los residuos
+```{r}
+n<- 1000
+Residuals_Replicate <- replicate(n = n, { 
+  sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + rnorm( length( ts_original_desde_2009 ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))  - ts_original_desde_2009), na.rm=TRUE  )
+  })
+mean( Residuals_Replicate)
+```
+Vemos que aunque la forma de la señal se asemeje más a la señal original, en la práctica la predicción está más alejada de la realidad.
+
+Otra manera de generar este vector de ruido puede ser el uso de bootstrap con el vector "random" que nos aporta la descomposición: 
+
+```{r}
+random_guess_2 <- sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))
+
+ts_guess_2_desde_2009_con_random_2 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess_2
+
+par(mfrow = c(3,1))
+
+plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "Predicción sin ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+
+#Calculando los residuos obtenemos un valor de 
+Residue_3 <- sum( abs( ts_guess_2_desde_2009_con_random_2 - ts_original_desde_2009) , na.rm=TRUE)
+Residue_3
+```
+A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas: 
+```{r}
+n<- 1000
+Residuals_Replicate_2 <- replicate(n = n, { 
+  sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))  - ts_original_desde_2009), na.rm=TRUE  )
+  })
+mean( Residuals_Replicate_2)
+```
+
+Efectivamente este modelo para predecir el ruido parece mejor que el anterior.
+
+Con lo que nuestra predicción final queda como
+
+```{r}
+plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")+
+  lines(time_desde_2009, trend_guess_desde_2009)
+```
+
+
+
 
 8. Proporcionar una estimaci´on de la temperatura hasta el a˜no 2030. En
 particular, proporcionar una estimaci´on de la temperatura para todos
