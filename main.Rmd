@@ -273,28 +273,85 @@ la temperatura de la d´ecada 2010-2020.
 
 El modelo más simple que pueda considerarse se basa en descomponer la serie temporal en tendencia, estacionalidad y ruido, hacer una predición de la tendencia mediante un modelo lineal y después añadir la estacionalidad correspondiente y un ruido aleatorio. 
 
-Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temporal que calcula las medias en intervalos de ~10 días
+Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temporal que calcula las medias en intervalos de ~10 días, reutilizamos el código para calcular la nueva descomposición teniendo en cuenta solo la información hasta el año 2010:
+
+```{r}
+df_avg_hasta_2010 <- df_avg[df_avg$year<2010,]
+df_avg_ts_hasta_2010 <- ts(df_avg_hasta_2010$avg_TG, start = c(min(df_avg_hasta_2010$year), min(df_avg_hasta_2010$month)), end = c(max(df_avg_hasta_2010$year), max(df_avg_hasta_2010$month)), frequency = 36)
+df_avg_ts_clean_hasta_2010 <- na_seasplit(df_avg_ts_hasta_2010)
+serie_desc_hasta_2010 <- decompose(df_avg_ts_clean_hasta_2010)
+
+for (i in unique(df_avg_hasta_2010$year)){    # Comprobamos qué años no tienen exactamente 36 muestras
+  if( sum(df_avg_hasta_2010$year == i, na.rm=TRUE) != 36 ){
+    print(i)
+  }
+}
+
+sum(is.na(df_avg_ts_clean_hasta_2010))        # Comprobamos que no hay ninguna entrada indefinida
+```
+
 
 Consideramos en primer lugar el dataframe que contiene la descomposición hasta el año 2010:
 
 Como la la tendencia de la serie es calculada a partir de enero de 1941 entonces sabemos que el número de entradas que hay hasta enero de 2010 serán $(3\cdot 12) \cdot (2010-1941+1)$
 ```{r}
-times_vec <- seq(1940,2010-1/36, by = 1/36)
-
-df_hasta_2010<- data.frame( time = times_vec, trend = serie_desc$trend[1:(36* (2010-1941+1))] , seasonal = serie_desc$seasonal[1:(36* (2010-1941+1))], random = serie_desc$random[1:(36* (2010-1941+1))])
 
 par(mfrow = c(3,1))
-plot( df_hasta_2010$time,  df_hasta_2010$trend, type = "l", main = "Tendencia hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
-plot( times_vec,  estacion_hasta_2010, type = "l", main = "Estacionalidad hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
-plot( times_vec,  ruido_hasta_2010, type = "l", main = "Ruido hasta 2010", xlab = "Año", ylab = "Temperatura (F)")
+plot( serie_desc_hasta_2010$trend  , type = "l", main = "Tendencia hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
+plot( serie_desc_hasta_2010$seasonal       , type = "l", main = "Estacionalidad hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
+plot( serie_desc_hasta_2010$random        , type = "l", main = "Ruido hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
+
 ```
-Procedemos ahora con el estudio previamente explicado: generamos un modelo lineal para la tendencia:
+Procedemos ahora con el estudio previamente explicado: 
+
+### 1. Generamos un modelo lineal para la tendencia:
 
 ```{r}
-modelo_tendencia<- lm()
+modelo_tendencia<- lm(df_hasta_2010$trend ~ df_hasta_2010$time)
+summary(modelo_tendencia)
+
+plot( df_hasta_2010$time,  df_hasta_2010$trend, type = "l", main = "Tendencia hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
+abline(modelo_tendencia, lwd = "2", col = "blue")
+legend("topleft", legend = c("Serie Original", "Línea de Tendencia (Modelo Lineal)"),
+       col = c("black", "blue"), lty = 1)
 ```
+### 2. Estudiamos la estacionalidad: para ello nos hacemos valer de la transformada de fourier rápida:
 
+Haremos uso de la fórmula $$\Delta f = \frac{F_m}{N}$$ para calcular el incremento frecuencial (o resolución) en el eje horizontal cuando hagamos la transformada de Fourier discreta, donde $F_m$ representa la frecuencia de muestreo (en nuestro caso 36) y $N$ representa el número total de muestras en la que se calcula la transformada.
 
+```{r}
+tf_season<- fft(df_hasta_2010$seasonal)
+N<- length(df_hasta_2010$time)
+freq_axis <- (1:N-1)* 36/N #Formula 
+mod_tf_season<-Mod(tf_season)
+plot(freq_axis,mod_tf_season, type = "lo")
+```
+Se comprueba fácilmente que la frecuencia primaria de esta estacionalidad corresponde a 1 (año), cosa que reafirma nuestro sentido común. Para hacer una aproximación de la estacionalidad simplemente cogeremos consideraremos que la único coeficiente de Fourier no nulo de la estacionalidad es el asociado a la frecuencia 1.
+
+Así, limpiamos los coeficientes no asociados a esta frecuencia
+```{r}
+tf_season[order(mod_tf_season, decreasing= TRUE)[3:N] ]<- 0
+tf_season[order(mod_tf_season, decreasing= TRUE)[1:2] ]<- tf_season[which.max(mod_tf_season)]
+plot(freq_axis,tf_season, xlab = "Frecuencia", ylab = "Amplitud")
+```
+y invertimos en Forier y comparamos con la estacionalidad original:
+
+```{r}
+season_guess <- Re(fft(tf_season, inverse = TRUE))/length(tf_season)
+
+par(mfrow = c(3,1))
+plot(df_hasta_2010$time, df_hasta_2010$seasonal, main = "Estacionalidad original", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
+plot(df_hasta_2010$time, season_guess, main = "Estacionalidad predicha", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
+plot(df_hasta_2010$time, abs( df_hasta_2010$seasonal - season_guess), main = "Diferencia", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
+```
+Vemos que la estacionalidad que hemos predicho se ajusta correctamente a la estacionalidad original.
+Por último, generamos un vector aleatorio con distribución normal centrada en 0 y que tenga como varianza la varianza del elemento aleatorio de la serie temporal.
+
+Notamos que desde el 2010-01-01 hasta el fin de la toma de medidas ( 2024-01 incluido ) transcurren un total de
+
+$(2023 - 2010 - 1)*12 + 1 = 145 $ meses, y por tanto, se corresponde a $145 * 3 = $ observaciones.
+
+Por lo tanto, el vector que tendremos que generar tendra está medida.
 
 8. Proporcionar una estimaci´on de la temperatura hasta el a˜no 2030. En
 particular, proporcionar una estimaci´on de la temperatura para todos
