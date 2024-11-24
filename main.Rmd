@@ -302,11 +302,18 @@ plot( serie_desc_hasta_2010$seasonal       , type = "l", main = "Estacionalidad 
 plot( serie_desc_hasta_2010$random        , type = "l", main = "Ruido hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
 
 ```
-Procedemos ahora con el estudio previamente explicado: 
+Hacemos notar que si tenemos en cuenta únicamente la información hasta 2010, entonces el dominio del modelo de descomposición aportado por el comando 'decompose' es
+```{r}
+print(   c(min(time(serie_desc_hasta_2010$trend)), max(time(serie_desc_hasta_2010$trend))   ))
+```
+es decir, el modelo requiere de información previa de almenos un año y posterior de almenos 0.7 años para tener información en un punto. Estudiando más de cerca los series de trend, seasonal y random podemos ver que al principio y final de estos vectores hay 18 NAs y por tanto el modelo requiere de $36 + 18 = 54$ entradas previas y de $ (1-0.306)*36 + 18 \approx 60$ entradas posteriores para calcular el valor de la descomposición en un punto. Ahora que ya podemos tener esto en cuenta procedemos ahora con el estudio previamente explicado: 
 
 ### 1. Generamos un modelo lineal para la tendencia:
 
 ```{r}
+
+df_hasta_2010<- data.frame( time = time(serie_desc_hasta_2010$trend), trend = serie_desc_hasta_2010$trend, seasonal = serie_desc_hasta_2010$seasonal, random = serie_desc_hasta_2010$random)
+
 modelo_tendencia<- lm(df_hasta_2010$trend ~ df_hasta_2010$time)
 summary(modelo_tendencia)
 
@@ -322,28 +329,104 @@ Haremos uso de la fórmula $$\Delta f = \frac{F_m}{N}$$ para calcular el increme
 ```{r}
 tf_season<- fft(df_hasta_2010$seasonal)
 N<- length(df_hasta_2010$time)
-freq_axis <- (1:N-1)* 36/N #Formula 
+freq_axis <- (1:N-1) * 36/N #Formula 
 mod_tf_season<-Mod(tf_season)
-plot(freq_axis,mod_tf_season, type = "lo")
+plot(freq_axis,mod_tf_season, type = "o")
 ```
 Se comprueba fácilmente que la frecuencia primaria de esta estacionalidad corresponde a 1 (año), cosa que reafirma nuestro sentido común. Para hacer una aproximación de la estacionalidad simplemente cogeremos consideraremos que la único coeficiente de Fourier no nulo de la estacionalidad es el asociado a la frecuencia 1.
 
 Así, limpiamos los coeficientes no asociados a esta frecuencia
 ```{r}
 tf_season[order(mod_tf_season, decreasing= TRUE)[3:N] ]<- 0
-tf_season[order(mod_tf_season, decreasing= TRUE)[1:2] ]<- tf_season[which.max(mod_tf_season)]
-plot(freq_axis,tf_season, xlab = "Frecuencia", ylab = "Amplitud")
+plot(freq_axis,Mod(tf_season), xlab = "Frecuencia", ylab = "Amplitud")
 ```
 y invertimos en Forier y comparamos con la estacionalidad original:
 
 ```{r}
 season_guess <- Re(fft(tf_season, inverse = TRUE))/length(tf_season)
 
+#season_guess <- season_guess/max(abs(season_guess)) * max(abs(df_hasta_2010$seasonal))
+
 par(mfrow = c(3,1))
-plot(df_hasta_2010$time, df_hasta_2010$seasonal, main = "Estacionalidad original", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
-plot(df_hasta_2010$time, season_guess, main = "Estacionalidad predicha", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
-plot(df_hasta_2010$time, abs( df_hasta_2010$seasonal - season_guess), main = "Diferencia", xlab = "Año", ylab = "Temperatura (10 * Cº)", type = "l")
+plot(df_hasta_2010$time, df_hasta_2010$seasonal, main = "Estacionalidad original", xlab = "Año", ylab = "Temperatura (Cº/10)", type = "l")
+plot(df_hasta_2010$time, season_guess, main = "Estacionalidad predicha", xlab = "Año", ylab = "Temperatura (Cº/10)", type = "l")
+plot(df_hasta_2010$time, abs( df_hasta_2010$seasonal - season_guess), main = "Diferencia", xlab = "Año", ylab = "Temperatura (Cº/10)", type = "l")
 ```
+Graficando vemos que las frecuencias de ambas señales son semejantes pero parecen estar ligeramente transladadas
+
+```{r}
+index1975 <- which(df_hasta_2010$time == 1975)
+
+season_anual_1<- season_guess[index1975:(index1975+35)]
+```
+
+
+
+Vemos ahora qué predicciones obtenemos para a partir del 2010 con este modelo:
+
+```{r}
+
+time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
+
+trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
+
+seasonal_guess_1_desde_2009 <- rep(season_anual_1, times=20)[1: length(time_desde_2009)] 
+
+ts_guess_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_1_desde_2009
+
+ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
+
+plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+lines(time_desde_2009 ,ts_original_desde_2009, col = "red")
+legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
+
+par(mfrow = c(3,1))
+
+plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+
+
+```
+
+
+
+Otra manera en la que podemos hacer esto es cogiendo un intervalo de un único año (por ejemplo 1975) para predecir toda la estacionalidad (la que nos proporciona el comando 'decompose'):
+```{r}
+index1975 <- which(df_hasta_2010$time == 1975)
+
+season_anual_2<- df_hasta_2010$seasonal[index1975:(index1975+35)]
+```
+
+```{r}
+
+time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
+
+trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
+
+seasonal_guess_2_desde_2009 <- rep(season_anual_2, times=20)[1: length(time_desde_2009)]
+
+ts_guess_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009
+
+ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
+
+plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+lines(time_desde_2009 ,ts_original_desde_2009, col = "red")
+legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
+
+par(mfrow = c(3,1))
+
+plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+
+
+```
+
+
+
+
+
 Vemos que la estacionalidad que hemos predicho se ajusta correctamente a la estacionalidad original.
 Por último, generamos un vector aleatorio con distribución normal centrada en 0 y que tenga como varianza la varianza del elemento aleatorio de la serie temporal.
 
