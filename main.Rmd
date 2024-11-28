@@ -15,9 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list = ls())
 ```
 
-En primer lugar, vamos a importar los datos.
+# Análisis de los datos diarios de temperatura media
 
-```{r}
+El fichero 'TG_STAID000455.txt' incluye los datos de temperatura media diaria, registrados en la estación meteorológica de Tenerife-Los Rodeos. En este trabajo vamos a analizar esta serie temporal.
+
+Antes de empezar con el análisis, vamos a importar los datos.
+
+```{r datos, echo=TRUE, message=FALSE, warning=FALSE}
 df<- read.csv("./TG_STAID000455.txt", skip = 20, header = TRUE, sep = ",")
 library(lubridate)
 df$DATE<- ymd(df$DATE)
@@ -227,7 +231,7 @@ Con el gráfico de la tendencia podemos observar el efecto del cambio climático
 
 Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # Promedio de temperatura en los primeros y últimos 10 años
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
@@ -340,7 +344,7 @@ season_anual_1<- season_guess[index1975:(index1975+35)]
 
 Vemos ahora qué predicciones obtenemos para a partir del 2010 con este modelo:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
@@ -370,7 +374,7 @@ index1975 <- which(df_hasta_2010$time == 1975)
 season_anual_2<- df_hasta_2010$seasonal[index1975:(index1975+35)]
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
@@ -394,7 +398,7 @@ plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_2_desde_2009) , type =
 
 A simple vista es difícil evaluar que modelo ajusta mejor a la realidad, por esto, calculamos los residuos al cuadrado:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 Residue_1 <- sum(abs( ts_guess_1_desde_2009 - ts_original_desde_2009 ))
 Residue_1
 Residue_2 <- sum(abs( ts_guess_2_desde_2009 - ts_original_desde_2009 ))
@@ -405,7 +409,7 @@ Vemos que el segundo modelo muestra un ajuste más preciso. Por esto, considerar
 Por último, generamos un vector aleatorio con distribución normal centrada en 0 y que tenga como varianza la varianza del elemento aleatorio de la serie temporal.
 Esto lo podemos hacer de varias maneras. La más sencilla es:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 random_guess <- rnorm( length( ts_original_desde_2009  ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))
 
 ts_guess_2_desde_2009_con_random <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess
@@ -423,7 +427,7 @@ Residue_3
 
 Para asegurarnos que el resultado no depende de una observación puntual del vector aleatorio podemos repetir el proceso y calcular los residuos $n$ veces para posteriormente calcular la media de los residuos.
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 n<- 1000
 Residuals_Replicate <- replicate(n = n, { 
   sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + rnorm( length( ts_original_desde_2009 ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))  - ts_original_desde_2009), na.rm=TRUE  )
@@ -435,7 +439,7 @@ Vemos que aunque la forma de la señal se asemeje más a la señal original, en 
 
 Otra manera de generar este vector de ruido puede ser el uso de bootstrap con el vector "random" que nos aporta la descomposición: 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 random_guess_2 <- sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))
 
 ts_guess_2_desde_2009_con_random_2 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess_2
@@ -453,7 +457,7 @@ Residue_3
 
 A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 n<- 1000
 Residuals_Replicate_2 <- replicate(n = n, { 
   sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))  - ts_original_desde_2009), na.rm=TRUE  )
@@ -465,7 +469,7 @@ Efectivamente este modelo para predecir el ruido parece mejor que el anterior.
 
 Con lo que nuestra predicción final queda como
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")+
   lines(time_desde_2009, trend_guess_desde_2009)
 ```
