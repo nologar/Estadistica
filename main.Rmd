@@ -232,9 +232,15 @@ Con el gráfico de la tendencia podemos observar el efecto del cambio climático
 Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
 
 ```{r eval=FALSE, include=FALSE}
+df_clean$year<-as.numeric(df_clean$year)
+# Calcular la diferencia entre años
+min_year <- min(df_clean$year, na.rm = TRUE) # Encuentra el año más pequeño
+df_clean <- df_clean %>% mutate(year_diff = year - min_year) # Calcula year_diff
+
 # Promedio de temperatura en los primeros y últimos 10 años
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
+
 
 promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
 promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
