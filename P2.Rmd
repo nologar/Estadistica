@@ -8,9 +8,21 @@ date: "2024-11-29"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de 𝐺𝑀(2,1,5,1,0.3). Puedes usar la función incorporada dnorm para la función de densidad de probabilidad de la distribución gaussiana.
+Cargamos el dataset y limpiamos el espacio de trabajo
 ```{r}
+rm(list=ls())
+data<-quakes
+```
 
+1.Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de 𝐺𝑀(2,1,5,1,0.3). Puedes usar la función incorporada dnorm para la función de densidad de probabilidad de la distribución gaussiana.
+```{r}
+# Empleando la información que se nos da en el enunciado realizamos la distribución
+# Primero establecemos el rango de representación de la distribución
+x<-seq(0,8,length.out=500)
+dis1<-dnorm(x,mean=2,sd=1)
+dis2<-dnorm(x,mean=5,sd=1)
+distribucion_conjunta<- dis1*0.3+(1-0.3)*dis2
+plot(x,distribucion_conjunta,type='l',col='blue',main='Visualización de la distribución de mezcla gaussiana')
 ```
 
 
