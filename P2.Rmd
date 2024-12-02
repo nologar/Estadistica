@@ -16,13 +16,22 @@ data<-quakes
 
 1.Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de 𝐺𝑀(2,1,5,1,0.3). Puedes usar la función incorporada dnorm para la función de densidad de probabilidad de la distribución gaussiana.
 ```{r}
-# Empleando la información que se nos da en el enunciado realizamos la distribución
-# Primero establecemos el rango de representación de la distribución
-x<-seq(0,8,length.out=500)
-dis1<-dnorm(x,mean=2,sd=1)
-dis2<-dnorm(x,mean=5,sd=1)
-distribucion_conjunta<- dis1*0.3+(1-0.3)*dis2
-plot(x,distribucion_conjunta,type='l',col='blue',main='Visualización de la distribución de mezcla gaussiana')
+# Establecemos el rango de x
+x <- seq(-1, 8, length.out = 500)
+
+# Componentes de la mezcla
+densidad1 <- dnorm(x, mean = 2, sd = 1)
+densidad2 <- dnorm(x, mean = 5, sd = 1)
+
+# Mezcla ponderada de las densidades
+w1 <- 0.3  # Peso de la primera gaussiana
+densidad_mezcla <- w1 * densidad1 + (1 - w1) * densidad2
+
+# Graficamos la densidad conjunta
+plot(x, densidad_mezcla, type = "l", col = "blue", lwd = 2,
+     main = "Densidad de la Mezcla Gaussiana GM(2, 1, 5, 1, 0.3)",
+     xlab = "x", ylab = "Densidad")
+
 ```
 
 
@@ -48,7 +57,10 @@ Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es
 4.Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?
 
 ```{r}
+# En el simple empleamos las funciones estándar existentes de AIC y BIC
 
+# Emplearemos esta librería para calcular el AIC y el BIC del modelo de mezcla gaussiana.
+library(mclust)
 ```
 
 5.Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?
