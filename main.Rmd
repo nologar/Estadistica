@@ -1,57 +1,60 @@
 ---
-title: "Untitled"
+title: "Trabajo Series Temporales"
 output: html_document
 date: "2024-11-13"
+author:
+  - Noé López garcía
+  - Joan Pedro Bruixola
+  - Carlos Ribes Garcia
+  - Marc Velasco Mateu
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())
 ```
 
-En primer lugar, vamos a importar los datos.
+# Análisis de los datos diarios de temperatura media
 
-```{r}
+El fichero 'TG_STAID000455.txt' incluye los datos de temperatura media diaria, registrados en la estación meteorológica de Tenerife-Los Rodeos. En este trabajo vamos a analizar esta serie temporal.
 
+Antes de empezar con el análisis, vamos a importar los datos.
+
+```{r datos, echo=TRUE, message=FALSE, warning=FALSE}
 df<- read.csv("./TG_STAID000455.txt", skip = 20, header = TRUE, sep = ",")
 library(lubridate)
 df$DATE<- ymd(df$DATE)
 ```
 
-1. Realizar gráficos que describan la serie original. Comprobar mediante
-algún método gráfico si existe estacionalidad anual.
+## Ejercicio 1
+**Realizar gráficos que describan la serie original. Comprobar mediante algún método gráfico si existe estacionalidad anual.**
 
 Primero vamos a visualizar la serie temporal.
 
 ```{r}
-
 # Gráfico de líneas para la serie temporal
 plot(df$DATE, df$TG, type = "l", col = "blue", 
      xlab = "Fecha", ylab = "Temperatura Media (TG)", 
      main = "Evolución de la Temperatura Media")
-
-
 ```
+
 Notamos que esta visualización se debe a los datos perdidos que tenemos en la variable TG. Sabemos que estos están etiquetados con un 9 en la variable Q_TG.
 
 ```{r}
-
 head(df[df$Q_TG== 9,])
-
 ```
 
 Notamos que los valores perdidos están asociados al valor -9999. Vamos a cambiarlo para que tengan el valor asociado NA.
 
 ```{r}
-
 df$TG[df$Q_TG== 9]=NA
 head(df[df$Q_TG== 9,])
-
 ```
 
 Ahora representamos la serie temporal excluyendo los NA's.
 
 ```{r}
-
 library(dplyr)
 
 df_clean <- df %>% na.omit()
@@ -59,40 +62,29 @@ df_clean <- df %>% na.omit()
 plot(df_clean$DATE, df_clean$TG, type = "l", col = "blue", 
      xlab = "Fecha", ylab = "Temperatura Media (TG)", 
      main = "Evolución de la Temperatura Media")
-
-
-
 ```
 
 También podemos hacer un histograma para analizar la distribución de las temperaturas.
 
 ```{r}
-
 # Histograma de la temperatura media
 hist(df_clean$TG, breaks = 20, col = "lightblue", 
      xlab = "Temperatura Media (TG)", 
      main = "Distribución de la Temperatura Media")
-
-
 ```
 
 También podemos analizar la dispersión y los posibles outliers con un boxplot.
 
 ```{r}
-
 # Boxplot de la temperatura media
 boxplot(df_clean$TG, horizontal = TRUE, col = "orange", 
         main = "Dispersión de la Temperatura Media", 
         xlab = "Temperatura Media (TG)")
-
-
 ```
 Se pueden observar muchos outliers. Seguramente, la mayoría de ellos serán aquellos valores etiquetados  con un 1 en la variable Q_TG.
 
 ```{r}
-
 df[df$Q_TG== 1,]
-
 ```
 
 Notamos que efectivamente todos estos valores están fuera de los bigotes del boxplot.
@@ -100,26 +92,16 @@ Notamos que efectivamente todos estos valores están fuera de los bigotes del bo
 Ahora veremos mediante algún método gráfico si existe estacionalidad anual.
 
 ```{r}
-
 df_ts <- ts(df$TG, frequency = 365, start = c(1941, 8))
 
-
 acf(df_ts, main = "ACF de la Temperatura Media", lag.max = 365 * 10, na.action = na.pass)
-
-
 ```
-
-
-
 
 Este gráfico de autocorrelación nos muestra como está correlacionada la serie temporal consigo misma en diferentes lags de tiempo. Como tenemos datos diarios hemos utilizado lags diarios. Como queremos ver si hay estacionalidad anual, cada unidad del lag representa un año. Por tanto, como podemos observar, hay una clara estacionalidad anual. Esto es de esperar pues estamos hablando de temperatura. Por eso, la autocorrelación aumenta en aquellos puntos en los que la estación sea la misma en distintos años, y disminuye cuando las estaciones sean muy diferentes en temperatura (por ejemplo verano e invierno). Solamente hemos mostrado los diez primeros años para que la visualización sea mejor, pero es suficiente para afirmar que existe estacionalidad en la serie.
 
+## Ejercicio 2
+**¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo lineal y un filtro de media móvil (teniendo cuidado con los valores NA).**
 
-
-
-
-2. ¿Parece que hay tendencia? Estimar la tendencia utilizando un modelo
-lineal y un filtro de media móvil (teniendo cuidado con los valores NA).
 ```{r}
 library(zoo)
 
@@ -139,8 +121,6 @@ abline(modelo_lineal, col = "green", lwd = 2)  # Línea de tendencia del modelo 
 # Leyenda para identificar las líneas
 legend("topright", legend = c("Serie Original", "Media Móvil (k=365)", "Línea de Tendencia (Modelo Lineal)"),
        col = c("blue", "red", "green"), lty = 1)
-
-
 ```
 
 Al contar ahora con la media móvil y el modelo lineal podemos ver que existe una tendencia al alza en los referido a la temperatura media, que va aumentando paulatinamente con los años. Esto no se podía ver en la señal original dado que las distintas estaciones enmascaran esta tendencia.
@@ -151,7 +131,8 @@ summary(modelo_lineal)
 Aquí podemos ver algunos de los parámetros más reelevantes del modelo lineal generado.
 Los residuos por ejemplo nos indican que existe una gran variedad, lo que se puede deber a la tendencia al alza de las temperaturas a lo largo de los años. Además también podemos ver los parámetros estimados del modelo.
 
-3. Analizar la varianza: ¿parece ser constante?
+## Ejercicio 3
+**Analizar la varianza: ¿parece ser constante?**
 
 ```{r}
 # Como hemos analizado esa estacionalidad anual vamos a relacionar esto con la varianza analizándola de manera anual
@@ -167,37 +148,25 @@ plot(years,var_por_año, type = "b", col = "blue",
 ```
 
 Como vemos la varianza de los datos van variando sin aparente relación. No obstante, vamos a calcular la correlación para estar 100% seguros de esto.
+
 ```{r}
 # Graficar la autocorrelación de las varianzas anuales
 acf(var_por_año, main = "Autocorrelación de las Varianzas Anuales de TG")
-
 ```
 Como vemos aquí se observan algunos picos aislados pero por lo general el valor de la correlación es cero, lo que es consistente con lo mencionado arriba.
 
-
-
-4. Antes de continuar con el análisis, transformar la serie temporal en
-una serie regular con una frecuencia fija (el problema es que distintos
-años tienen diferentes números de días). Para ello, agregamos la serie
-temporal en 36 puntos por año, promediando los días de cada mes en
-tres periodos de aproximadamente 10 días. Es decir, para cada mes se
-promedian (con la media) las observaciones en tres periodos: desde el 1
-hasta el 10, desde el 11 hasta el 20, y desde el 21 hasta el final del mes
-(este último periodo puede tener una longitud variable). Las funciones
-summarise en combinación con group by del paquete dplyr pueden
-ser útiles para esta operación.
+## Ejercicio 4
+**Antes de continuar con el análisis, transformar la serie temporal en una serie regular con una frecuencia fija (el problema es que distintos años tienen diferentes números de días). Para ello, agregamos la serie temporal en 36 puntos por año, promediando los días de cada mes en tres periodos de aproximadamente 10 días. Es decir, para cada mes se promedian (con la media) las observaciones en tres periodos: desde el 1 hasta el 10, desde el 11 hasta el 20, y desde el 21 hasta el final del mes (este último periodo puede tener una longitud variable). Las funciones `summarise` en combinación con `group_by` del paquete `dplyr` pueden ser útiles para esta operación.**
 
 Primero, crearemos un nuevo DataFrame con los promedios calculados de cada periodo tal como indica el enunciado.
 
 ```{r}
-
 df_avg <- df %>% mutate(day = day(DATE), month= month(DATE), year = year(DATE), period = ifelse(day<=10,'1-10',ifelse(day<=20,'11-20','21-fin'))) %>% # Creamos nuevas columnas con el día, mes, año y los periodos de cada mes
   group_by(year,month,period) %>% # Agrupamos por año, mes y periodo
   summarise(avg_TG = mean(TG, na.rm = TRUE)) %>% # Calculamos el promedio para cada periodo
   ungroup()
   
 print(df_avg) 
- 
 ```
 
 Como podemos observar, hay muchos registros que tienen en la columna 'avg_TG' el término NaN. Esto se debe a que en cada uno de los respectivos periodos solo había valores faltantes NA, por eso al calcular el promedio de los valores faltantes el resultado és NaN ('not a number').
@@ -205,22 +174,18 @@ Como podemos observar, hay muchos registros que tienen en la columna 'avg_TG' el
 A continuación, creamos una serie regular usando los promedios calculados. Como tenemos tres periodos por mes y cada año tiene doce meses tendremos una serie con frecuencia fija 36.
 
 ```{r}
-
 df_avg_ts <- ts(df_avg$avg_TG, start = c(min(df_avg$year), min(df_avg$month)), frequency = 36)
 
 plot(df_avg_ts, main = "Serie Temporal Promediada", ylab = "Temperatura Media Promediada", xlab = "Tiempo")
-
 ```
 
-
-5. Descomponer la serie en tendencia, estacionalidad y residuos. Estudiar
-los residuos y la tendencia.
+## Ejercicio 5
+**Descomponer la serie en tendencia, estacionalidad y residuos. Estudiar los residuos y la tendencia.**
 
 Como hemos comentado antes, nuestro DataFrame df_avg tenía valores de tipo NaN, por tanto, nuestra serie temporal df_avg_ts también los tiene. Además, se puede observar en df_avg que estos valores faltantes están muy juntos. En 1942, tenemos todos los periodos desde el segundo mes hasta el octavo lleno de valores faltantes. Además, desde el décimo mes hasta el fin de año también tenemos todos los periodos llenos de NaN. Esto provoca que prácticamente todo el año 1942 esté sin registros. Esto puede suponer un problema para este ejercicio, ya que queremos analizar la serie descomponiéndola en tendencia, estacionalidad y residuos, y para esta tarea necesitamos tener una serie continua. Para solventar este problema pensamos que la mejor solución es la imputación, ya que con la eliminación perderíamos casi todos los registros de un año entero. Para realizar la imputación, utilizaremos la función 'na.seasplit' de la librería 'imputeTS', que basa la imputación en patrones estacionales. Como hemos probado que nuestra serie tiene estacionalidad anual, esta función imputa los valores faltantes basándose en los datos de otros años en los mismos meses o periodos.  
 
 
 ```{r}
-
 require(imputeTS)
 
 # Imputar valores faltantes respetando estacionalidad
@@ -232,16 +197,15 @@ serie_desc <- decompose(df_avg_ts_clean)
 
 plot(serie_desc)
 ```
+
 Primero vamos a analizar los residuos. Los residuos deberían ser cercanos a ruido blanco, es decir, no deberían mostrar patrones claros ni autocorrelación significativa. 
 
 ```{r}
-
 # Graficar los residuos
 plot(serie_desc$random, main = "Residuos de la serie temporal", ylab = "Residuos", xlab = "Tiempo")
 
 # Autocorrelación de los residuos
 acf(na.omit(serie_desc$random), main = "ACF de los residuos")
-
 ```
 
 Notamos que a simple vista los residuos sí que se asemejan a ruido blanco. Para estar seguros, hemos echo un gráfico de autocorrelación. Como era de esperar no parece haber una autocorrelación significativa en los residuos.
@@ -249,28 +213,34 @@ Notamos que a simple vista los residuos sí que se asemejan a ruido blanco. Para
 A continuación analizaremos la tendencia.
 
 ```{r}
-
 # Graficar la tendencia
 plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendencia", xlab = "Tiempo")
-
 ```
 
 Se puede observar que la serie tiene una clara tendencia creciente.
 
-6. ¿Hay evidencia del cambio clim´atico en estas observaciones? Es decir,
-¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando
-otros m´etodos.
+## Ejercicio 6
+**¿Hay evidencia del cambio climático en estas observaciones? Es decir, ¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando otros métodos.**
+
 ```{r}
 # Graficar la tendencia
 plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendencia", xlab = "Tiempo")
 ```
+
 Con el gráfico de la tendencia podemos observar el efecto del cambio climático, ya que muestra una tendencia ascendente claramente definida. Esto indica que, desde 1940 hasta 2024, ha habido un cambio significativo en la temperatura de aproximadamente 4 grados Celsius (40 décimas de grado Celsius). Esta variación refleja un patrón que es consistente con el calentamiento global, caracterizado por un aumento progresivo de las temperaturas a lo largo de las últimas décadas.
+
 Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
+df_clean$year<-as.numeric(df_clean$year)
+# Calcular la diferencia entre años
+min_year <- min(df_clean$year, na.rm = TRUE) # Encuentra el año más pequeño
+df_clean <- df_clean %>% mutate(year_diff = year - min_year) # Calcula year_diff
+
 # Promedio de temperatura en los primeros y últimos 10 años
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
+
 
 promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
 promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
@@ -282,12 +252,10 @@ cat("Diferencia de temperatura media en (décimas de grado Celsius):", promedio_
 ```
 
 
-7. Considerando la informaci´on hasta el a˜no 2010, construir un modelo
-predictivo para la temperatura en la d´ecada 2010-2020. Contrastar la
-predicci´on obtenida con los datos observados. Comparar distintos modelos predictivos y evaluarlos en cuanto a su capacidad para predecir
-la temperatura de la d´ecada 2010-2020.
+## Ejercicio 7
+**Considerando la información hasta el año 2010, construir un modelo predictivo para la temperatura en la década 2010-2020. Contrastar la predicción obtenida con los datos observados. Comparar distintos modelos predictivos y evaluarlos en cuanto a su capacidad para predecir la temperatura de la década 2010-2020.**
 
-El modelo más simple que pueda considerarse se basa en descomponer la serie temporal en tendencia, estacionalidad y ruido, hacer una predición de la tendencia mediante un modelo lineal y después añadir la estacionalidad correspondiente y un ruido aleatorio. 
+El modelo más simple que pueda considerarse se basa en descomponer la serie temporal en tendencia, estacionalidad y ruido, hacer una predicción de la tendencia mediante un modelo lineal y después añadir la estacionalidad correspondiente y un ruido aleatorio. 
 
 Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temporal que calcula las medias en intervalos de ~10 días, reutilizamos el código para calcular la nueva descomposición teniendo en cuenta solo la información hasta el año 2010:
 
@@ -306,19 +274,19 @@ for (i in unique(df_avg_hasta_2010$year)){    # Comprobamos qué años no tienen
 sum(is.na(df_avg_ts_clean_hasta_2010))        # Comprobamos que no hay ninguna entrada indefinida
 ```
 
-
 Consideramos en primer lugar el dataframe que contiene la descomposición hasta el año 2010:
 
 Como la la tendencia de la serie es calculada a partir de enero de 1941 entonces sabemos que el número de entradas que hay hasta enero de 2010 serán $(3\cdot 12) \cdot (2010-1941+1)$
-```{r}
 
+```{r}
 par(mfrow = c(3,1))
 plot( serie_desc_hasta_2010$trend  , type = "l", main = "Tendencia hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
 plot( serie_desc_hasta_2010$seasonal       , type = "l", main = "Estacionalidad hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
 plot( serie_desc_hasta_2010$random        , type = "l", main = "Ruido hasta 2010", xlab = "Año", ylab = "Temperatura (Cº/10)")
-
 ```
+
 Hacemos notar que si tenemos en cuenta únicamente la información hasta 2010, entonces el dominio del modelo de descomposición aportado por el comando 'decompose' es
+
 ```{r}
 print(   c(min(time(serie_desc_hasta_2010$trend)), max(time(serie_desc_hasta_2010$trend))   ))
 ```
@@ -328,7 +296,7 @@ es decir, el modelo requiere de información previa de almenos un año y posteri
 
 ```{r}
 
-df_hasta_2010<- data.frame( time = time(serie_desc_hasta_2010$trend), trend = serie_desc_hasta_2010$trend, seasonal = serie_desc_hasta_2010$seasonal, random = serie_desc_hasta_2010$random)
+df_hasta_2010 <- data.frame( time = time(serie_desc_hasta_2010$trend), trend = serie_desc_hasta_2010$trend, seasonal = serie_desc_hasta_2010$seasonal, random = serie_desc_hasta_2010$random)
 
 modelo_tendencia<- lm(df_hasta_2010$trend ~ df_hasta_2010$time)
 summary(modelo_tendencia)
@@ -338,6 +306,7 @@ abline(modelo_tendencia, lwd = "2", col = "blue")
 legend("topleft", legend = c("Serie Original", "Línea de Tendencia (Modelo Lineal)"),
        col = c("black", "blue"), lty = 1)
 ```
+
 ### 2. Estudiamos la estacionalidad: para ello nos hacemos valer de la transformada de fourier rápida:
 
 Haremos uso de la fórmula $$\Delta f = \frac{F_m}{N}$$ para calcular el incremento frecuencial (o resolución) en el eje horizontal cuando hagamos la transformada de Fourier discreta, donde $F_m$ representa la frecuencia de muestreo (en nuestro caso 36) y $N$ representa el número total de muestras en la que se calcula la transformada.
@@ -349,9 +318,11 @@ freq_axis <- (1:N-1) * 36/N #Formula
 mod_tf_season<-Mod(tf_season)
 plot(freq_axis,mod_tf_season, type = "o")
 ```
+
 Se comprueba fácilmente que la frecuencia primaria de esta estacionalidad corresponde a 1 (año), cosa que reafirma nuestro sentido común. Para hacer una aproximación de la estacionalidad simplemente cogeremos consideraremos que la único coeficiente de Fourier no nulo de la estacionalidad es el asociado a la frecuencia 1.
 
 Así, limpiamos los coeficientes no asociados a esta frecuencia
+
 ```{r}
 tf_season[order(mod_tf_season, decreasing= TRUE)[3:N] ]<- 0
 plot(freq_axis,Mod(tf_season), xlab = "Frecuencia", ylab = "Amplitud")
@@ -368,6 +339,7 @@ plot(df_hasta_2010$time, df_hasta_2010$seasonal, main = "Estacionalidad original
 plot(df_hasta_2010$time, season_guess, main = "Estacionalidad predicha", xlab = "Año", ylab = "Temperatura (Cº/10)", type = "l")
 plot(df_hasta_2010$time, abs( df_hasta_2010$seasonal - season_guess), main = "Diferencia", xlab = "Año", ylab = "Temperatura (Cº/10)", type = "l")
 ```
+
 Graficando vemos que las frecuencias de ambas señales son semejantes pero parecen estar ligeramente transladadas
 
 ```{r}
@@ -376,12 +348,9 @@ index1975 <- which(df_hasta_2010$time == 1975)
 season_anual_1<- season_guess[index1975:(index1975+35)]
 ```
 
-
-
 Vemos ahora qué predicciones obtenemos para a partir del 2010 con este modelo:
 
-```{r}
-
+```{r eval=FALSE, include=FALSE}
 time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
@@ -401,21 +370,17 @@ par(mfrow = c(3,1))
 plot(time_desde_2009, ts_guess_1_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_1_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
-
-
 ```
 
-
-
 Otra manera en la que podemos hacer esto es cogiendo un intervalo de un único año (por ejemplo 1975) para predecir toda la estacionalidad (la que nos proporciona el comando 'decompose'):
+
 ```{r}
 index1975 <- which(df_hasta_2010$time == 1975)
 
 season_anual_2<- df_hasta_2010$seasonal[index1975:(index1975+35)]
 ```
 
-```{r}
-
+```{r eval=FALSE, include=FALSE}
 time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
@@ -435,13 +400,11 @@ par(mfrow = c(3,1))
 plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_2_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
-
-
 ```
 
 A simple vista es difícil evaluar que modelo ajusta mejor a la realidad, por esto, calculamos los residuos al cuadrado:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 Residue_1 <- sum(abs( ts_guess_1_desde_2009 - ts_original_desde_2009 ))
 Residue_1
 Residue_2 <- sum(abs( ts_guess_2_desde_2009 - ts_original_desde_2009 ))
@@ -452,7 +415,7 @@ Vemos que el segundo modelo muestra un ajuste más preciso. Por esto, considerar
 Por último, generamos un vector aleatorio con distribución normal centrada en 0 y que tenga como varianza la varianza del elemento aleatorio de la serie temporal.
 Esto lo podemos hacer de varias maneras. La más sencilla es:
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 random_guess <- rnorm( length( ts_original_desde_2009  ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))
 
 ts_guess_2_desde_2009_con_random <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess
@@ -467,19 +430,22 @@ plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random , type = "l", main= "Pred
 Residue_3 <- sum( abs( ts_guess_2_desde_2009_con_random - ts_original_desde_2009) )
 Residue_3
 ```
-Para asegurarnos que el resultado no depende de una observación puntual del vector aleatorio podemos repetir el proceso y calcular los residuos $n$ veces para posteriormente calcular la media de los residuos
-```{r}
+
+Para asegurarnos que el resultado no depende de una observación puntual del vector aleatorio podemos repetir el proceso y calcular los residuos $n$ veces para posteriormente calcular la media de los residuos.
+
+```{r eval=FALSE, include=FALSE}
 n<- 1000
 Residuals_Replicate <- replicate(n = n, { 
   sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + rnorm( length( ts_original_desde_2009 ), mean = 0, sd = sd( serie_desc_hasta_2010$random, na.rm=TRUE))  - ts_original_desde_2009), na.rm=TRUE  )
   })
 mean( Residuals_Replicate)
 ```
+
 Vemos que aunque la forma de la señal se asemeje más a la señal original, en la práctica la predicción está más alejada de la realidad.
 
 Otra manera de generar este vector de ruido puede ser el uso de bootstrap con el vector "random" que nos aporta la descomposición: 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 random_guess_2 <- sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))
 
 ts_guess_2_desde_2009_con_random_2 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009+random_guess_2
@@ -494,8 +460,10 @@ plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Pr
 Residue_4 <- sum( abs( ts_guess_2_desde_2009_con_random_2 - ts_original_desde_2009) , na.rm=TRUE)
 Residue_4
 ```
-A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas: 
-```{r}
+
+A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas:
+
+```{r eval=FALSE, include=FALSE}
 n<- 1000
 Residuals_Replicate_2 <- replicate(n = n, { 
   sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))  - ts_original_desde_2009), na.rm=TRUE  )
@@ -507,16 +475,12 @@ Efectivamente este modelo para predecir el ruido parece mejor que el anterior.
 
 Con lo que nuestra predicción final queda como
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")+
   lines(time_desde_2009, trend_guess_desde_2009)
 ```
 
+## Ejercicio 8
+**Proporcionar una estimación de la temperatura hasta el año 2030. En particular, proporcionar una estimación de la temperatura para todos los meses del año 2030. Utilizar el mejor modelo obtenido en el punto anterior. Intentar también proporcionar una estimación de la confianza o incertidumbre de las predicciones.**
 
 
-
-8. Proporcionar una estimaci´on de la temperatura hasta el a˜no 2030. En
-particular, proporcionar una estimaci´on de la temperatura para todos
-los meses del a˜no 2030. Utilizar el mejor modelo obtenido en el punto
-anterior. Intentar tambi´en proporcionar una estimaci´on de la confianza
-o incertidumbre de las predicciones.
