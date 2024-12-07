@@ -249,8 +249,8 @@ cat("Temperatura promedio últimos 10 años en (décimas de grado Celsius):", pr
 cat("Diferencia de temperatura media en (décimas de grado Celsius):", promedio_ultimo - promedio_primero, "\n")
 ```
 
-
 ## Ejercicio 7
+
 **Considerando la información hasta el año 2010, construir un modelo predictivo para la temperatura en la década 2010-2020. Contrastar la predicción obtenida con los datos observados. Comparar distintos modelos predictivos y evaluarlos en cuanto a su capacidad para predecir la temperatura de la década 2010-2020.**
 
 El modelo más simple que pueda considerarse se basa en descomponer la serie temporal en tendencia, estacionalidad y ruido, hacer una predicción de la tendencia mediante un modelo lineal y después añadir la estacionalidad correspondiente y un ruido aleatorio. 
@@ -293,7 +293,6 @@ es decir, el modelo requiere de información previa de almenos un año y posteri
 ### 1. Generamos un modelo lineal para la tendencia:
 
 ```{r ej711, echo=FALSE}
-
 df_hasta_2010 <- data.frame( time = time(serie_desc_hasta_2010$trend), trend = serie_desc_hasta_2010$trend, seasonal = serie_desc_hasta_2010$seasonal, random = serie_desc_hasta_2010$random)
 
 modelo_tendencia<- lm(df_hasta_2010$trend ~ df_hasta_2010$time)
@@ -462,7 +461,7 @@ Residue_4
 A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas:
 
 ```{r ej7212, echo=FALSE}
-n<- 1000
+n <- 1000
 Residuals_Replicate_2 <- replicate(n = n, { 
   sum( abs( trend_guess_desde_2009 + seasonal_guess_2_desde_2009  + sample( serie_desc_hasta_2010$random  , size = length(ts_original_desde_2009))  - ts_original_desde_2009), na.rm=TRUE  )
   })
@@ -475,10 +474,35 @@ Con lo que nuestra predicción final queda como
 
 ```{r ej7213, echo=FALSE}
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")+
-  lines(time_desde_2009, trend_guess_desde_2009)
+lines(time_desde_2009, trend_guess_desde_2009)
 ```
 
 ## Ejercicio 8
+
 **Proporcionar una estimación de la temperatura hasta el año 2030. En particular, proporcionar una estimación de la temperatura para todos los meses del año 2030. Utilizar el mejor modelo obtenido en el punto anterior. Intentar también proporcionar una estimación de la confianza o incertidumbre de las predicciones.**
 
+```{r ej81, echo=FALSE}
+time_desde_2009_hasta_2030 <- seq(2009, 2030 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
+time_desde_2009_hasta_2024 <- seq(2009, 2024 + 2/36, by = 1/36)
 
+#predictor <- data.frame(time_desde_2009_hasta_2030)
+predictor <- data.frame(time_desde_2009_hasta_2030)
+
+trend_guess_desde_2009_hasta_2030 <- predict(modelo_tendencia, newdata=predictor, interval = "confidence")
+
+seasonal_guess_2_desde_2009_hasta_2030 <- rep(season_anual_2, times=22)[1: length(time_desde_2009_hasta_2030)]
+
+ts_guess_2_desde_2009_hasta_2030 <- trend_guess_desde_2009_hasta_2030 + seasonal_guess_2_desde_2009_hasta_2030
+
+ts_original_desde_2009_hasta_2024 <- df_avg_ts_clean[which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)]
+
+plot(time_desde_2009_hasta_2030, ts_guess_2_desde_2009_hasta_2030, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+lines(seq(2009, 2024 + 2/36, by = 1/36)  ,ts_original_desde_2009_hasta_2024, col = "red")
+legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
+
+par(mfrow = c(3,1))
+
+plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(seq(2009, 2024 + 2/36, by = 1/36) ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_2_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+```
