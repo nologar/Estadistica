@@ -1,0 +1,60 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-11-29"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de 𝐺𝑀(2,1,5,1,0.3). Puedes usar la función incorporada dnorm para la función de densidad de probabilidad de la distribución gaussiana.
+```{r}
+
+```
+
+
+2.Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función optim. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.
+
+Para encontrar un buen punto inicial para los parámetros, simplemente puedes observar el histograma de los datos y tratar de adivinar la ubicación de las medias 𝜇1μ 1​y 𝜇2μ 2​. Una suposición inicial para 𝑤w puede ser la proporción del tamaño de los dos grupos de datos (o usar w=0.5 como suposición inicial). También puedes probar diferentes valores iniciales y reportar los resultados con la menor log-verosimilitud negativa.
+
+Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con control = list(maxit = 10000) en la función optim. Probablemente también habrá muchos warnings, principalmente porque los parámetros deben estar restringidos, especialmente 
+𝑤. Puedes ignorar los warnings.
+
+```{r}
+
+```
+
+
+3.Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana 
+𝑁(𝜇,𝜎2)N(μ,σ 2 ). Ajusta este modelo a los datos observados de longitud.
+```{r}
+
+```
+
+
+4.Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?
+
+```{r}
+
+```
+
+5.Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?
+```{r}
+
+```
+
+
+6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
+```{r}
+
+```
+
+
+7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01α=0.01 y a nivel 𝛼=0.1α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
+
+```{r}
+
+```
+
+

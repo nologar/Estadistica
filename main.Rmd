@@ -82,6 +82,7 @@ boxplot(df_clean$TG, horizontal = TRUE, col = "orange",
         main = "Dispersión de la Temperatura Media", 
         xlab = "Temperatura Media (TG)")
 ```
+
 Se pueden observar muchos outliers. Seguramente, la mayoría de ellos serán aquellos valores etiquetados  con un 1 en la variable Q_TG.
 
 ```{r ej17, echo=FALSE}
@@ -227,10 +228,17 @@ Con el gráfico de la tendencia podemos observar el efecto del cambio climático
 
 Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
 
+<<<<<<< HEAD
 ```{r ej62, echo=FALSE}
+df_clean$year<-as.numeric(df_clean$year)
+# Calcular la diferencia entre años
+min_year <- min(df_clean$year, na.rm = TRUE) # Encuentra el año más pequeño
+df_clean <- df_clean %>% mutate(year_diff = year - min_year) # Calcula year_diff
+
 # Promedio de temperatura en los primeros y últimos 10 años
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
+
 
 promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
 promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
@@ -351,13 +359,13 @@ ts_guess_1_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_1_desde_2009
 
 ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
 
-plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009, ts_guess_1_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009 ,ts_original_desde_2009, col = "red")
 legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
 
 par(mfrow = c(3,1))
 
-plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009, ts_guess_1_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_1_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 ```
@@ -381,13 +389,13 @@ ts_guess_2_desde_2009 <- trend_guess_desde_2009 + seasonal_guess_2_desde_2009
 
 ts_original_desde_2009 <- df_avg_ts_clean[  which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)   ]
 
-plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009 ,ts_original_desde_2009, col = "red")
 legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
 
 par(mfrow = c(3,1))
 
-plot(time_desde_2009, ts_guess_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+plot(time_desde_2009, ts_guess_2_desde_2009, type = "l", main = "Predicción",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 plot(time_desde_2009 ,abs(ts_original_desde_2009-ts_guess_2_desde_2009) , type = "l", main= "Diferencia absoluta",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 ```
@@ -447,8 +455,8 @@ plot(time_desde_2009 ,ts_original_desde_2009, type = "l", main= "Original",xlab 
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 
 #Calculando los residuos obtenemos un valor de 
-Residue_3 <- sum( abs( ts_guess_2_desde_2009_con_random_2 - ts_original_desde_2009) , na.rm=TRUE)
-Residue_3
+Residue_4 <- sum( abs( ts_guess_2_desde_2009_con_random_2 - ts_original_desde_2009) , na.rm=TRUE)
+Residue_4
 ```
 
 A priori este residuo parece más bajo, pero comprobamos la consistencia de esta suposición mediante réplicas:
