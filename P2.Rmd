@@ -1,21 +1,30 @@
 ---
-title: "Untitled"
+title: "Trabajo Inferencia Estadistica"
 output: html_document
-date: "2024-11-29"
+date: "2024-11-13"
+author:
+  - Noé López garcía
+  - Joan Pedro Bruixola
+  - Carlos Ribes Garcia
+  - Marc Velasco Mateu
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+library(mclust)
 ```
 
-Cargamos el dataset y limpiamos el espacio de trabajo
-```{r}
-rm(list=ls())
+
+```{r datos, include=FALSE}
 data<-quakes
 ```
 
-1.Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de 𝐺𝑀(2,1,5,1,0.3). Puedes usar la función incorporada dnorm para la función de densidad de probabilidad de la distribución gaussiana.
-```{r}
+1. Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de $GM(2,1,5,1,0.3)$. Puedes usar la función incorporada `dnorm` para la función de densidad de probabilidad de la distribución gaussiana.
+
+```{r ej1, echo=FALSE}
 # Establecemos el rango de x
 x <- seq(-1, 8, length.out = 500)
 
@@ -35,12 +44,11 @@ plot(x, densidad_mezcla, type = "l", col = "blue", lwd = 2,
 ```
 
 
-2.Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función optim. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.
+2.Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función `optim`. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.
 
-Para encontrar un buen punto inicial para los parámetros, simplemente puedes observar el histograma de los datos y tratar de adivinar la ubicación de las medias 𝜇1μ 1​y 𝜇2μ 2​. Una suposición inicial para 𝑤w puede ser la proporción del tamaño de los dos grupos de datos (o usar w=0.5 como suposición inicial). También puedes probar diferentes valores iniciales y reportar los resultados con la menor log-verosimilitud negativa.
+Para encontrar un buen punto inicial para los parámetros, simplemente puedes observar el histograma de los datos y tratar de adivinar la ubicación de las medias $\mu_1$ y $\mu_2$. Una suposición inicial para $w$ puede ser la proporción del tamaño de los dos grupos de datos (o usar $w=0.5$ como suposición inicial). También puedes probar diferentes valores iniciales y reportar los resultados con la menor log-verosimilitud negativa.
 
-Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con control = list(maxit = 10000) en la función optim. Probablemente también habrá muchos warnings, principalmente porque los parámetros deben estar restringidos, especialmente 
-𝑤. Puedes ignorar los warnings.
+Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con `control = list(maxit = 10000)` en la función `optim`. Probablemente también habrá muchos *warnings*, principalmente porque los parámetros deben estar restringidos, especialmente $w$. Puedes ignorar los *warnings*.
 
 ```{r}
 
@@ -60,7 +68,7 @@ Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es
 # En el simple empleamos las funciones estándar existentes de AIC y BIC
 
 # Emplearemos esta librería para calcular el AIC y el BIC del modelo de mezcla gaussiana.
-library(mclust)
+
 ```
 
 5.Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?
