@@ -105,12 +105,45 @@ lines(x, y, col = "blue", lwd = 2, lty = 1)
 title(main = title)
 ```
 
-3.Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana 
-𝑁(𝜇,𝜎2)N(μ,σ 2 ). Ajusta este modelo a los datos observados de longitud.
-```{r}
+3.Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana $N(\mu,\sigma^2)$. Ajusta este modelo a los datos observados de longitud.
 
+```{r ej3.1, echo=FALSE}
+#Creamos la función de log-verosimilitud negativa
+log_verosimilitud2 <- function(params, x) {
+  mu <- params[1]
+  sd <- params[2]
+
+  # Calcular la log-verosimilitud negativa
+  densidades <- dnorm(x, mean = mu, sd = sd)
+  return(-sum(log(densidades)))
+}
+
+# Buscamos los valores optimizando
+resultado2 <- optim(
+  par = c(180,6),
+  fn = log_verosimilitud2,
+  x = data$long,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01),
+  upper = c(Inf, Inf)
+)
+
+cat("Estimación del parámetro mu:",resultado2$par[1],"\n")
+cat("Estimación del parámetro sd:",resultado2$par[2],"\n")
 ```
 
+```{r ej3.2, echo=FALSE}
+x <- seq(165,189,length.out = 240)
+y <- dnorm(x, resultado2$par[1],resultado2$par[2])
+
+# Crear el histograma
+hist(data$long, breaks = 30, probability = TRUE, col = "gray", xlab = "Longitud", ylab = "Densidad", main = "")
+
+# Superponer la curva de densidad
+title <- "Densidad de mezcla gausiana sobre histograma de la longitud"
+lines(x, y, col = "blue", lwd = 2, lty = 1)
+title(main = title)
+```
 
 4.Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?
 
