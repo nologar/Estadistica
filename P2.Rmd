@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 rm(list=ls())
 
 library(mclust)
+library(ggplot2)
 ```
 
 
@@ -25,24 +26,24 @@ data<-quakes
 1. Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de $GM(2,1,5,1,0.3)$. Puedes usar la función incorporada `dnorm` para la función de densidad de probabilidad de la distribución gaussiana.
 
 ```{r ej1, echo=FALSE}
+#Implementamos la función de densidad en R
+densidadmg <- function(x, mu1, sd1, mu2, sd2, w) {
+  # Calculamos la densidad de la mezcla
+  densidad <- w * dnorm(x, mean = mu1, sd = sd1) + (1-w) * dnorm(x, mean = mu2, sd = sd2)
+  return(densidad)
+}
+
 # Establecemos el rango de x
 x <- seq(-1, 8, length.out = 500)
 
-# Componentes de la mezcla
-densidad1 <- dnorm(x, mean = 2, sd = 1)
-densidad2 <- dnorm(x, mean = 5, sd = 1)
+#Calculamos la densidad
+densidad <- densidadmg(x, 2,1,5,1,0.3)
 
-# Mezcla ponderada de las densidades
-w1 <- 0.3  # Peso de la primera gaussiana
-densidad_mezcla <- w1 * densidad1 + (1 - w1) * densidad2
-
-# Graficamos la densidad conjunta
-plot(x, densidad_mezcla, type = "l", col = "blue", lwd = 2,
+#Graficamos la densidad
+plot(x, densidad, type = "l", col = "blue", lwd = 2,
      main = "Densidad de la Mezcla Gaussiana GM(2, 1, 5, 1, 0.3)",
      xlab = "x", ylab = "Densidad")
-
 ```
-
 
 2.Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función `optim`. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.
 
@@ -50,10 +51,59 @@ Para encontrar un buen punto inicial para los parámetros, simplemente puedes ob
 
 Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con `control = list(maxit = 10000)` en la función `optim`. Probablemente también habrá muchos *warnings*, principalmente porque los parámetros deben estar restringidos, especialmente $w$. Puedes ignorar los *warnings*.
 
-```{r}
+Antes de empezar a buscar los parámetros, representemos el histograma de la variable longitud para encontrar un buen valor inicial para nuestra búsqueda de parámetros.
 
+```{r ej2.1, echo=FALSE}
+p <- ggplot(data, aes(x=long)) + 
+  geom_histogram(color="black", fill="white", breaks=(floor(min(data$long))+0.5):(ceiling(max(data$long))-0.5)) +
+  labs(title="Histograma de la variable longitud",x="Longitud", y = "Frecuencia")
+p
 ```
 
+```{r ej2.2, echo=FALSE}
+#Creamos la función de log-verosimilitud negativa
+log_verosimilitud <- function(params, x) {
+  mu1 <- params[1]
+  sd1 <- params[2]
+  mu2 <- params[3]
+  sd2 <- params[4]
+  w <- params[5]
+
+  # Calcular la log-verosimilitud negativa
+  densidades <- densidadmg(x, mu1, sd1, mu2, sd2, w)
+  return(-sum(log(densidades)))
+}
+
+# Buscamos los valores optimizando
+resultado <- optim(
+  par = c(167,2,182,2,0.3),
+  fn = log_verosimilitud,
+  x = data$long,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  upper = c(Inf, Inf, Inf, Inf, 0.99)
+)
+
+cat("Estimación del parámetro mu1:",resultado$par[1],"\n")
+cat("Estimación del parámetro sd1:",resultado$par[2],"\n")
+cat("Estimación del parámetro mu2:",resultado$par[3],"\n")
+cat("Estimación del parámetro sd2:",resultado$par[4],"\n")
+cat("Estimación del parámetro w:",resultado$par[5],"\n")
+```
+Para comprobar si realmente estos son una buena estimación, dibujamos la densidad de una mezcla gaussiana de estos parámetros sobre el histograma anterior.
+
+```{r ej2.3, echo=FALSE}
+x <- seq(165,189,length.out = 240)
+y <- densidadmg(x, resultado$par[1],resultado$par[2],resultado$par[3],resultado$par[4],resultado$par[5])
+
+# Crear el histograma
+hist(data$long, breaks = 30, probability = TRUE, col = "gray", xlab = "Longitud", ylab = "Densidad", main = "")
+
+# Superponer la curva de densidad
+title <- "Densidad de mezcla gausiana sobre histograma de la longitud"
+lines(x, y, col = "blue", lwd = 2, lty = 1)
+title(main = title)
+```
 
 3.Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana 
 𝑁(𝜇,𝜎2)N(μ,σ 2 ). Ajusta este modelo a los datos observados de longitud.
