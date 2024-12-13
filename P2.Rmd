@@ -16,6 +16,8 @@ rm(list=ls())
 
 library(mclust)
 library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
 
@@ -266,13 +268,73 @@ ggplot( data = data, aes(x = depth))+
   
 
 ```
-En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC.
+En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC tanto en el caso de la profundidad como para la latitud.
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
 ```{r}
+data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
+# Separamos en un dataset por evento
+
+data_Tonga<-data %>%
+  filter(class=="Tonga trench")
+
+data_Plate<- data %>%
+  filter(class=="Plate junction")
+
+# Función para calcular intervalos de confianza (formato aseado)
+intervalo_confianza <- function(x, nivel = 0.95) {
+  n <- length(x)
+  mean_x <- mean(x)
+  se <- sd(x) / sqrt(n)  # Error estándar
+  error <- qt((1 + nivel) / 2, df = n - 1) * se
+  c(Media = mean_x, LI = mean_x - error, LS = mean_x + error)
+}
+
+# Procesar datos para Tonga Trench
+resultados_tonga <- data_Tonga %>%
+  summarise(
+    Longitud = intervalo_confianza(long),
+    Latitud = intervalo_confianza(lat),
+    Profundidad = intervalo_confianza(depth)
+  )
+
+# Trasponer y renombrar columnas para Tonga
+resultados_tonga <- as.data.frame(t(resultados_tonga))  # Transponer
+colnames(resultados_tonga) <- c("Media", "Valor inferior", "Valor superior")  # Renombrar columnas
+
+# Procesar datos para Plate Junction
+resultados_plate <- data_Plate %>%
+  summarise(
+    Longitud = intervalo_confianza(long),
+    Latitud = intervalo_confianza(lat),
+    Profundidad = intervalo_confianza(depth)
+  )
+
+# Trasponer y renombrar columnas para Plate
+resultados_plate <- as.data.frame(t(resultados_plate))  # Transponer
+colnames(resultados_plate) <- c("Media", "Valor inferior", "Valor superior")  # Renombrar columnas
+
+# Mostrar resultados
+# Resultados de Tonga
+print(resultados_tonga)
+
+#Resultados para Plate junction
+print(resultados_plate)
 ```
+
+Los intervalos de confianza nos permiten estimar el rango en el que se encuentra la media verdadera de las variables analizadas (longitud, latitud y profundidad) con un nivel de confianza del 95 %. En este caso, se observa que los intervalos de confianza de cada variable no se solapan entre los dos grupos (Tonga trench y Plate junction). Esto confirma que existen diferencias estadísticamente significativas entre ambos conjuntos de eventos.
+
+En particular, las diferencias en las medias y los intervalos reflejan características claramente distintas:
+
+-En longitud, los eventos del grupo Tonga trench se encuentran en regiones más al este, mientras que Plate junction está más al oeste. Esto es coherente con lo que se ve claramente en el mapa que se nos proporciona en la práctica.
+
+-En latitud, los eventos de Tonga trench están ubicados en su mayoría más al sur, en comparación con Plate junction.
+
+-En profundidad, los eventos de Tonga trench se producen a mayores profundidades, lo que es consistente pues se trata de una fosa , mientras que los eventos de Plate junction ocurren en zonas más superficiales.
+
+Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
 
 
 7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01α=0.01 y a nivel 𝛼=0.1α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
