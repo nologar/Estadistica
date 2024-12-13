@@ -240,23 +240,30 @@ resultado_prof_simple <- optim(
 hist(data$depth)
 
 resultado_prof_pond <- optim(
-  par = c(100,2,600,2,0.6), #Inicializamos viendo en el histograma dónde parecen estar los dos centros de las gaussianas
+  par = c(75,60,600,150,0.7), #Inicializamos viendo en el histograma dónde parecen estar los dos centros de las gaussianas 170, 600
   fn = log_verosimilitud,
   x = data$depth,
   method = "L-BFGS-B",
-  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  lower = c(0, 0.01, -Inf, 0.01, 0.01),
   upper = c(Inf, Inf, Inf, Inf, 0.99)
 )
 
 AIC_prof_simple <- AICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 BIC_prof_simple <- BICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a latitud son: \nAIC:', AIC_prof_simple,'\nBIC:', BIC_prof_simple)
+cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a profundidad son: \nAIC:', AIC_prof_simple,'\nBIC:', BIC_prof_simple)
 
 AIC_prof_pond <- AICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 BIC_prof_pond <- BICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond)
+cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a profundidad son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond)
+
+densidadobtenida <- densidadmg( data$depth, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
+
+ggplot( data = data, aes(x = depth))+
+  geom_histogram( aes(y = ..density..) )+
+  geom_line( aes( y = densidadobtenida), linewidth = 1)
+  
 
 ```
 En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC.
