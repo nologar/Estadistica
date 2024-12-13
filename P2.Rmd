@@ -168,16 +168,98 @@ Es obvio que no podemos asumir que nuestros datos siguen una distribución norma
 4.Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?
 
 ```{r}
-# En el simple empleamos las funciones estándar existentes de AIC y BIC
+# Definimos las funciones para calcular el AIC y BIC a partir de las logverosimilitudes
+AICfromL <- function(x, params, LogLike){
+  return(  2*length(params) + 2*LogLike(params,x) ) #Sumamos en vez de restar porque las LogVerosimilitudes las hemos cambiado de signo
+}
+BICfromL <- function(x, params, LogLike){
+  return( length(params)*log(length(x)) + 2*LogLike(params,x) ) # idem a AICfromL
+}
 
-# Emplearemos esta librería para calcular el AIC y el BIC del modelo de mezcla gaussiana.
+#AIC y BIC del modelo gaussiano simple:
+
+AICsimple <- AICfromL(data$long, params = resultado2$par, log_verosimilitud2)
+BICsimple <- BICfromL(data$long, params = resultado2$par, log_verosimilitud2)
+
+cat('\nResultados de los criterios AIC y BIC para el modelo simple: \nAIC:', AICsimple,'\nBIC:', BICsimple)
+
+#AIC y BIC del modelo gaussiano ponderado:
+AICponderado <- AICfromL(data$long, params = resultado$par, log_verosimilitud)
+BICponderado <- BICfromL(data$long, params = resultado$par, log_verosimilitud)
+
+cat('\n\nResultados de los criterios AIC y BIC para el modelo ponderado: \nAIC:', AICponderado,'\nBIC:', BICponderado)
+
 
 ```
+Con lo que se tiene que ambos criterios se decantan por el modelo ponderado ante el modelo simple.
 
 5.Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?
+
+En primer lugar hacemos el estudio de latitud:
 ```{r}
+resultado_lat_simple <- optim(
+  par = c(mean(data$lat), sd(data$lat)),
+  fn = log_verosimilitud2,
+  x = data$lat,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  upper = c(Inf, Inf, Inf, Inf, 0.99)
+)
+
+resultado_lat_pond <- optim(
+  par = c(15,2,25,2,0.3),
+  fn = log_verosimilitud,
+  x = data$lat,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  upper = c(Inf, Inf, Inf, Inf, 0.99)
+)
+
+AIC_lat_simple <- AICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
+BIC_lat_simple <- BICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
+
+cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a latitud son: \nAIC:', AIC_lat_simple,'\nBIC:', BIC_lat_simple)
+
+AIC_lat_pond <- AICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
+BIC_lat_pond <- BICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
+
+cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_lat_pond,'\nBIC:', BIC_lat_pond)
 
 ```
+Y a continuación de la profundidad:
+```{r}
+resultado_prof_simple <- optim(
+  par = c(mean(data$depth), sd(data$depth)),
+  fn = log_verosimilitud2,
+  x = data$depth,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  upper = c(Inf, Inf, Inf, Inf, 0.99)
+)
+
+hist(data$depth)
+
+resultado_prof_pond <- optim(
+  par = c(100,2,600,2,0.6), #Inicializamos viendo en el histograma dónde parecen estar los dos centros de las gaussianas
+  fn = log_verosimilitud,
+  x = data$depth,
+  method = "L-BFGS-B",
+  lower = c(-Inf, 0.01, -Inf, 0.01, 0.01),
+  upper = c(Inf, Inf, Inf, Inf, 0.99)
+)
+
+AIC_prof_simple <- AICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
+BIC_prof_simple <- BICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
+
+cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a latitud son: \nAIC:', AIC_prof_simple,'\nBIC:', BIC_prof_simple)
+
+AIC_prof_pond <- AICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
+BIC_prof_pond <- BICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
+
+cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond)
+
+```
+En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC.
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
