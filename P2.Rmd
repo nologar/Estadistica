@@ -337,10 +337,99 @@ En particular, las diferencias en las medias y los intervalos reflejan caracter�
 Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
 
 
-7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01α=0.01 y a nivel 𝛼=0.1α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
+7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01 y a nivel α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
+
+
+Para responder a la pregunta que se plantea realizaremos un contraste de hipótesis sobre las medias de los grupos:
+$H_{0}: \mu_{1} = \mu_{2}$, $H_{1}: \mu_{1} \neq \mu_{2}$.
+
 
 ```{r}
 
+# Dividir los datos en dos grupos según la magnitud
+grupo1 <- data$stations[data$class == "Tonga trench"]
+grupo2 <- data$stations[data$class == "Plate junction"]
+
 ```
+
+El contraste lo podríamos resolver mediante un test t-student bilateral, pero primero tenemos que estudiar si las poblaciones son aproximadamente normales. Primero, haremos un histograma y veremos si las distribuciones parecen normales:
+
+```{r}
+
+par(mfrow = c(1, 2)) 
+
+# Histograma para el grupo "Tonga trench"
+hist(grupo1, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Tonga trench", 
+     xlab = "Stations", 
+     probability = TRUE)
+lines(density(grupo1), col = "darkblue", lwd = 2)
+
+# Histograma para el grupo "Plate junction"
+hist(grupo2, 
+     breaks = 20, 
+     col = "lightgreen", 
+     main = "Plate junction", 
+     xlab = "Stations", 
+     probability = TRUE)
+lines(density(grupo2), col = "darkgreen", lwd = 2)
+
+```
+Observamos que los histogramas nos muestran una distribución de los datos que no parece normal. Para confirmarlo, hacemos un test shapiro-wilk:
+
+```{r}
+
+shapiro.test(grupo1) # para el grupo Tonga trench
+shapiro.test(grupo2) # para el grupo Plate junction
+
+```
+
+Por tanto, podemos confirmar que los grupos no siguen una distribución normal. Esto implica que no podemos asumir normalidad, y por tanto no podemos aplicar un test t-student. Por eso, utilizaremos una técnica bootstrap. Lo que haremos es hacer intervalos de confianzaa niveles 99% y 90% para las diferencias de las medias de muestras generadas con bootstrap y veremos si el 0 está. Es decir, estamos resolviendo el contraste: $H_{0}: \mu_{1} - \mu_{2} = 0$, $H_{1}: \mu_{1} - \mu_{2} \neq 0$.
+
+
+```{r}
+
+set.seed(123) # Para reproducibilidad
+
+# Crear una función para calcular la diferencia de medias
+diff_means <- function(data1, data2) {
+  mean(data1) - mean(data2)
+}
+
+# Bootstrap
+n_boot <- 10000
+boot_diff <- replicate(n_boot, {
+  sample1 <- sample(grupo1, length(grupo1), replace = TRUE)
+  sample2 <- sample(grupo2, length(grupo2), replace = TRUE)
+  diff_means(sample1, sample2)
+})
+
+# Intervalo de confianza al 99% y al 90%
+ci_99 <- quantile(boot_diff, probs = c(0.005, 0.995))
+ci_90 <- quantile(boot_diff, probs = c(0.05, 0.95))
+
+print(ci_99)
+print(ci_90)
+
+# Verificar si el intervalo incluye 0
+if (ci_99[1] > 0 || ci_99[2] < 0) {
+  cat("Rechazamos H0 al nivel de significancia 0.01\n")
+} else {
+  cat("No podemos rechazar H0 al nivel de significancia 0.01\n")
+}
+
+if (ci_90[1] > 0 || ci_90[2] < 0) {
+  cat("Rechazamos H0 al nivel de significancia 0.1\n")
+} else {
+  cat("No podemos rechazar H0 al nivel de significancia 0.1\n")
+}
+
+
+```
+
+Es decir, con un nivel de significancia de 0.01 no tenemos evidencia suficiente para decir que las medias de los grupos no son iguales. En cambio, para un nivel de 0.1 si que tenemos evidencia estadística suficiente para afirmar que las medias de los grupos son distintas.
+
 
 
