@@ -278,9 +278,8 @@ ggplot()+
   geom_line( aes( x = Xaxis,y = dnorm(Xaxis, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 ```
 Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de valores de 'depth', con lo que no es extraño que se priorice un modelo con 3 parámetros menos.
-=======
-En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC tanto en el caso de la profundidad como para la latitud.
->>>>>>> 87f01d8f9203918939af18485f65828a7b6b3590
+
+
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
