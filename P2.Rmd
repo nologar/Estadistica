@@ -283,7 +283,7 @@ Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de 
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
-```{r ej6, message=FALSE, warning=FALSE}
+```{r ej6, message=FALSE, warning=FALSE,echo=FALSE}
 data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
 # Separamos en un dataset por evento
@@ -326,16 +326,22 @@ resultados_plate <- data_Plate %>%
 # Trasponer y renombrar columnas para Plate
 resultados_plate <- as.data.frame(t(resultados_plate))  # Transponer
 colnames(resultados_plate) <- c("Media", "Valor inferior", "Valor superior")  # Renombrar columnas
+```
 
+Empleando la distinción del archivo quakes_plot se ha separado el dataframe en los datos corresponientes a la Tonga y a unión de las placas. Primeramente, se muestran los resultados obtenidos para los datos correspondientes a la Tonga.
+```{r ej6 2 , message=FALSE, warning=FALSE,echo=FALSE}
 # Mostrar resultados
 # Resultados de Tonga
 print(resultados_tonga)
+```
 
+Ahora se muestran los resultados para la unión de las placas.
+```{r ej6 3, message=FALSE, warning=FALSE,echo=FALSE}
 #Resultados para Plate junction
 print(resultados_plate)
 ```
 
-Los intervalos de confianza nos permiten estimar el rango en el que se encuentra la media verdadera de las variables analizadas (longitud, latitud y profundidad) con un nivel de confianza del 95 %. En este caso, se observa que los intervalos de confianza de cada variable no se solapan entre los dos grupos (Tonga trench y Plate junction). Esto confirma que existen diferencias estadísticamente significativas entre ambos conjuntos de eventos.
+Finalmente, como vemos los intervalos de confianza nos permiten estimar el rango en el que se encuentra la media verdadera de las variables analizadas (longitud, latitud y profundidad) con un nivel de confianza del 95 %. En este caso, se observa que los intervalos de confianza de cada variable no se solapan entre los dos grupos (Tonga trench y Plate junction). Esto confirma que existen diferencias estadísticamente significativas entre ambos conjuntos de eventos.
 
 En particular, las diferencias en las medias y los intervalos reflejan características claramente distintas:
 
