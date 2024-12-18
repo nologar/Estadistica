@@ -237,8 +237,6 @@ resultado_prof_simple <- optim(
   upper = c(Inf, Inf, Inf, Inf, 0.99)
 )
 
-hist(data$depth)
-
 resultado_prof_pond <- optim(
   par = c(75,60,600,150,0.7), #Inicializamos viendo en el histograma dónde parecen estar los dos centros de las gaussianas 170, 600
   fn = log_verosimilitud,
@@ -256,17 +254,27 @@ cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a pr
 AIC_prof_pond <- AICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 BIC_prof_pond <- BICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a profundidad son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond)
+cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a profundidad son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond, '\n\n')
 
-densidadobtenida <- densidadmg( data$depth, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
+Xaxis <- seq(-200,800, by = 1)
+densidadobtenidaX <- densidadmg( Xaxis, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
+densidadobtenidadepth  <- densidadmg( data$depth, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
 
-ggplot( data = data, aes(x = depth))+
-  geom_histogram( aes(y = ..density..) )+
-  geom_line( aes( y = densidadobtenida), linewidth = 1)
-  
+ggplot(data = data)+
+  geom_histogram( aes(x = depth, y = ..density..) )+
+  geom_line( aes( x = depth, y = densidadobtenidadepth), linewidth = 1, col = "red")+
+  geom_line( aes( x = depth,y = dnorm(depth, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 
 ```
-En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC.
+En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC. Y esto puede desconcertar un poco en vista del aspecto de la gráfica anterior, pero tenemos que tener en cuenta que las funciones de densidad gaussianas tienen soporte infinito, y por tanto, si visualzamos un poco más del eje X:
+
+```{r}
+ggplot()+
+  geom_histogram( data = data, aes(x = depth, y = ..density..) )+
+  geom_line( aes( x = Xaxis, y = densidadobtenidaX), linewidth = 1, col = "red")+
+  geom_line( aes( x = Xaxis,y = dnorm(Xaxis, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
+```
+Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de valores de 'depth', con lo que no es extraño que se priorice un modelo con 3 parámetros menos.
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
