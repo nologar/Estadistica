@@ -283,7 +283,7 @@ Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de 
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
-```{r}
+```{r ej6, message=FALSE, warning=FALSE}
 data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
 # Separamos en un dataset por evento
