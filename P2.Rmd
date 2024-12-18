@@ -16,6 +16,8 @@ rm(list=ls())
 
 library(mclust)
 library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
 
 
@@ -266,6 +268,7 @@ ggplot(data = data)+
   geom_line( aes( x = depth,y = dnorm(depth, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 
 ```
+<<<<<<< HEAD
 En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC. Y esto puede desconcertar un poco en vista del aspecto de la gráfica anterior, pero tenemos que tener en cuenta que las funciones de densidad gaussianas tienen soporte infinito, y por tanto, si visualzamos un poco más del eje X:
 
 ```{r}
@@ -275,18 +278,170 @@ ggplot()+
   geom_line( aes( x = Xaxis,y = dnorm(Xaxis, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 ```
 Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de valores de 'depth', con lo que no es extraño que se priorice un modelo con 3 parámetros menos.
+=======
+En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC tanto en el caso de la profundidad como para la latitud.
+>>>>>>> 87f01d8f9203918939af18485f65828a7b6b3590
 
 
 6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
 ```{r}
+data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
+# Separamos en un dataset por evento
+
+data_Tonga<-data %>%
+  filter(class=="Tonga trench")
+
+data_Plate<- data %>%
+  filter(class=="Plate junction")
+
+# Función para calcular intervalos de confianza (formato aseado)
+intervalo_confianza <- function(x, nivel = 0.95) {
+  n <- length(x)
+  mean_x <- mean(x)
+  se <- sd(x) / sqrt(n)  # Error estándar
+  error <- qt((1 + nivel) / 2, df = n - 1) * se
+  c(Media = mean_x, LI = mean_x - error, LS = mean_x + error)
+}
+
+# Procesar datos para Tonga Trench
+resultados_tonga <- data_Tonga %>%
+  summarise(
+    Longitud = intervalo_confianza(long),
+    Latitud = intervalo_confianza(lat),
+    Profundidad = intervalo_confianza(depth)
+  )
+
+# Trasponer y renombrar columnas para Tonga
+resultados_tonga <- as.data.frame(t(resultados_tonga))  # Transponer
+colnames(resultados_tonga) <- c("Media", "Valor inferior", "Valor superior")  # Renombrar columnas
+
+# Procesar datos para Plate Junction
+resultados_plate <- data_Plate %>%
+  summarise(
+    Longitud = intervalo_confianza(long),
+    Latitud = intervalo_confianza(lat),
+    Profundidad = intervalo_confianza(depth)
+  )
+
+# Trasponer y renombrar columnas para Plate
+resultados_plate <- as.data.frame(t(resultados_plate))  # Transponer
+colnames(resultados_plate) <- c("Media", "Valor inferior", "Valor superior")  # Renombrar columnas
+
+# Mostrar resultados
+# Resultados de Tonga
+print(resultados_tonga)
+
+#Resultados para Plate junction
+print(resultados_plate)
 ```
 
+Los intervalos de confianza nos permiten estimar el rango en el que se encuentra la media verdadera de las variables analizadas (longitud, latitud y profundidad) con un nivel de confianza del 95 %. En este caso, se observa que los intervalos de confianza de cada variable no se solapan entre los dos grupos (Tonga trench y Plate junction). Esto confirma que existen diferencias estadísticamente significativas entre ambos conjuntos de eventos.
 
-7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01α=0.01 y a nivel 𝛼=0.1α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
+En particular, las diferencias en las medias y los intervalos reflejan características claramente distintas:
+
+-En longitud, los eventos del grupo Tonga trench se encuentran en regiones más al este, mientras que Plate junction está más al oeste. Esto es coherente con lo que se ve claramente en el mapa que se nos proporciona en la práctica.
+
+-En latitud, los eventos de Tonga trench están ubicados en su mayoría más al sur, en comparación con Plate junction.
+
+-En profundidad, los eventos de Tonga trench se producen a mayores profundidades, lo que es consistente pues se trata de una fosa , mientras que los eventos de Plate junction ocurren en zonas más superficiales.
+
+Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
+
+
+7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01 y a nivel α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
+
+
+Para responder a la pregunta que se plantea realizaremos un contraste de hipótesis sobre las medias de los grupos:
+$H_{0}: \mu_{1} = \mu_{2}$, $H_{1}: \mu_{1} \neq \mu_{2}$.
+
 
 ```{r}
 
+# Dividir los datos en dos grupos según la magnitud
+grupo1 <- data$stations[data$class == "Tonga trench"]
+grupo2 <- data$stations[data$class == "Plate junction"]
+
 ```
+
+El contraste lo podríamos resolver mediante un test t-student bilateral, pero primero tenemos que estudiar si las poblaciones son aproximadamente normales. Primero, haremos un histograma y veremos si las distribuciones parecen normales:
+
+```{r}
+
+par(mfrow = c(1, 2)) 
+
+# Histograma para el grupo "Tonga trench"
+hist(grupo1, 
+     breaks = 20, 
+     col = "lightblue", 
+     main = "Tonga trench", 
+     xlab = "Stations", 
+     probability = TRUE)
+lines(density(grupo1), col = "darkblue", lwd = 2)
+
+# Histograma para el grupo "Plate junction"
+hist(grupo2, 
+     breaks = 20, 
+     col = "lightgreen", 
+     main = "Plate junction", 
+     xlab = "Stations", 
+     probability = TRUE)
+lines(density(grupo2), col = "darkgreen", lwd = 2)
+
+```
+Observamos que los histogramas nos muestran una distribución de los datos que no parece normal. Para confirmarlo, hacemos un test shapiro-wilk:
+
+```{r}
+
+shapiro.test(grupo1) # para el grupo Tonga trench
+shapiro.test(grupo2) # para el grupo Plate junction
+
+```
+
+Por tanto, podemos confirmar que los grupos no siguen una distribución normal. Esto implica que no podemos asumir normalidad, y por tanto no podemos aplicar un test t-student. Por eso, utilizaremos una técnica bootstrap. Lo que haremos es hacer intervalos de confianzaa niveles 99% y 90% para las diferencias de las medias de muestras generadas con bootstrap y veremos si el 0 está. Es decir, estamos resolviendo el contraste: $H_{0}: \mu_{1} - \mu_{2} = 0$, $H_{1}: \mu_{1} - \mu_{2} \neq 0$.
+
+
+```{r}
+
+set.seed(123) # Para reproducibilidad
+
+# Crear una función para calcular la diferencia de medias
+diff_means <- function(data1, data2) {
+  mean(data1) - mean(data2)
+}
+
+# Bootstrap
+n_boot <- 10000
+boot_diff <- replicate(n_boot, {
+  sample1 <- sample(grupo1, length(grupo1), replace = TRUE)
+  sample2 <- sample(grupo2, length(grupo2), replace = TRUE)
+  diff_means(sample1, sample2)
+})
+
+# Intervalo de confianza al 99% y al 90%
+ci_99 <- quantile(boot_diff, probs = c(0.005, 0.995))
+ci_90 <- quantile(boot_diff, probs = c(0.05, 0.95))
+
+print(ci_99)
+print(ci_90)
+
+# Verificar si el intervalo incluye 0
+if (ci_99[1] > 0 || ci_99[2] < 0) {
+  cat("Rechazamos H0 al nivel de significancia 0.01\n")
+} else {
+  cat("No podemos rechazar H0 al nivel de significancia 0.01\n")
+}
+
+if (ci_90[1] > 0 || ci_90[2] < 0) {
+  cat("Rechazamos H0 al nivel de significancia 0.1\n")
+} else {
+  cat("No podemos rechazar H0 al nivel de significancia 0.1\n")
+}
+
+
+```
+
+Es decir, con un nivel de significancia de 0.01 no tenemos evidencia suficiente para decir que las medias de los grupos no son iguales. En cambio, para un nivel de 0.1 si que tenemos evidencia estadística suficiente para afirmar que las medias de los grupos son distintas.
+
 
 
