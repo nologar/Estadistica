@@ -7,13 +7,9 @@ author:
 - Marc Velasco Mateu
 date: "2024-11-13"
 output:
-<<<<<<< HEAD
   pdf_document: default
   html_document: default
-=======
-  html_document: default
-  pdf_document: default
->>>>>>> 7fc9a5b72d33a9b085080aa04af586a535623075
+
 ---
 
 ```{r setup, include=FALSE}
@@ -350,10 +346,11 @@ index1975 <- which(df_hasta_2010$time == 1975)
 season_anual_1<- season_guess[index1975:(index1975+35)]
 ```
 
+
 Vemos ahora qué predicciones obtenemos para a partir del 2010 con este modelo:
 
 ```{r ej725, echo=FALSE}
-time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
+time_desde_2009 <- seq(2009, max( time(df_avg_ts_clean)), by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
 
@@ -383,7 +380,7 @@ season_anual_2<- df_hasta_2010$seasonal[index1975:(index1975+35)]
 ```
 
 ```{r ej727, echo=FALSE}
-time_desde_2009 <- seq(2009, 2024 + 2/36, by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
+time_desde_2009 <- seq(2009, max( time(df_avg_ts_clean)), by = 1/36)               # Vector de tiempos desde 2009 para que haya un poco de solapamiento
 
 trend_guess_desde_2009 <- coef(modelo_tendencia)[1] + time_desde_2009*coef(modelo_tendencia)[2]
 
@@ -475,10 +472,15 @@ mean( Residuals_Replicate_2)
 
 Efectivamente este modelo para predecir el ruido parece mejor que el anterior.
 
-Con lo que nuestra predicción final queda como
+Con lo que en caso de preferir una predición con ruido, nuestra predicción final queda como
 
 ```{r ej7213, echo=FALSE, message=FALSE, warning=FALSE}
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
+lines(time_desde_2009, trend_guess_desde_2009)
+```
+en caso de querer una más conservadora, simplemente obviariamos el ruido, quedando como:
+```{r ej7214, echo=FALSE, message=FALSE, warning=FALSE}
+plot(time_desde_2009 ,ts_guess_2_desde_2009 , type = "l", main= "Predicción sin ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009, trend_guess_desde_2009)
 ```
 

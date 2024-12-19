@@ -173,7 +173,7 @@ Es obvio que no podemos asumir que nuestros datos siguen una distribución norma
 ## Ejercicio 4
 **Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?**
 
-```{r}
+```{r, ej4.1}
 # Definimos las funciones para calcular el AIC y BIC a partir de las logverosimilitudes
 AICfromL <- function(x, params, LogLike){
   return(  2*length(params) + 2*LogLike(params,x) ) #Sumamos en vez de restar porque las LogVerosimilitudes las hemos cambiado de signo
@@ -200,7 +200,7 @@ Con lo que se tiene que ambos criterios se decantan por el modelo ponderado ante
 **Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?**
 
 En primer lugar hacemos el estudio de latitud:
-```{r}
+```{r ej5.1, echo = FALSE, warning=FALSE}
 resultado_lat_simple <- optim(
   par = c(mean(data$lat), sd(data$lat)),
   fn = log_verosimilitud2,
@@ -228,11 +228,23 @@ AIC_lat_pond <- AICfromL(data$lat, params = resultado_lat_pond$par, log_verosimi
 BIC_lat_pond <- BICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
 
 cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_lat_pond,'\nBIC:', BIC_lat_pond)
+
+densidadobtenidalat  <- densidadmg( data$lat, resultado_lat_pond$par[1], resultado_lat_pond$par[2], resultado_lat_pond$par[3], resultado_lat_pond$par[4], resultado_lat_pond$par[5] )
+
+ggplot(data = data)+
+  geom_histogram( aes(x = lat, y = ..density..), binwidth=1 )+
+  geom_line( aes( x = lat, y = densidadobtenidalat), linewidth = 1, col = "red")+
+  geom_line( aes( x = lat,y = dnorm(lat, resultado_lat_simple$par[1],resultado_lat_simple$par[2])), linewidth = 1, col = "blue")
 ```
+Vemos que los modelos són prácticamente idénticos, y esto lo podemos esto es porque el modelo de mezcla ha considerado solo una gaussiana ( el parámetro peso es 0.99)
+```{r}
+resultado_lat_pond$par
+```
+y por esto tiene sentido que el modelo simple, que tiene menos parámetros salga beneficiado del criterio AIC/BIC.
 
 Y a continuación de la profundidad:
 
-```{r}
+```{r ej5.2,echo=FALSE, warning = FALSE}
 resultado_prof_simple <- optim(
   par = c(mean(data$depth), sd(data$depth)),
   fn = log_verosimilitud2,
@@ -266,16 +278,16 @@ densidadobtenidaX <- densidadmg( Xaxis, resultado_prof_pond$par[1], resultado_pr
 densidadobtenidadepth  <- densidadmg( data$depth, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
 
 ggplot(data = data)+
-  geom_histogram( aes(x = depth, y = ..density..) )+
+  geom_histogram( aes(x = depth, y = ..density..), binwidth = 10 )+
   geom_line( aes( x = depth, y = densidadobtenidadepth), linewidth = 1, col = "red")+
   geom_line( aes( x = depth,y = dnorm(depth, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 ```
 
 En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC. Y esto puede desconcertar un poco en vista del aspecto de la gráfica anterior, pero tenemos que tener en cuenta que las funciones de densidad gaussianas tienen soporte infinito, y por tanto, si visualzamos un poco más del eje X:
 
-```{r}
+```{r ej5.3, echo=FALSE}
 ggplot()+
-  geom_histogram( data = data, aes(x = depth, y = ..density..) )+
+  geom_histogram( data = data, aes(x = depth, y = ..density..) , binwidth = 10)+
   geom_line( aes( x = Xaxis, y = densidadobtenidaX), linewidth = 1, col = "red")+
   geom_line( aes( x = Xaxis,y = dnorm(Xaxis, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 ```
