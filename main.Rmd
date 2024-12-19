@@ -162,7 +162,7 @@ Como vemos aquí se observan algunos picos aislados pero por lo general el valor
 
 Primero, crearemos un nuevo DataFrame con los promedios calculados de cada periodo tal como indica el enunciado.
 
-```{r ej41, echo=FALSE}
+```{r ej41, echo=FALSE, message=FALSE, warning=FALSE}
 df_avg <- df %>% mutate(day = day(DATE), month= month(DATE), year = year(DATE), period = ifelse(day<=10,'1-10',ifelse(day<=20,'11-20','21-fin'))) %>% # Creamos nuevas columnas con el día, mes, año y los periodos de cada mes
   group_by(year,month,period) %>% # Agrupamos por año, mes y periodo
   summarise(avg_TG = mean(TG, na.rm = TRUE)) %>% # Calculamos el promedio para cada periodo
@@ -240,7 +240,6 @@ df_clean <- df_clean %>% mutate(year_diff = year - min_year) # Calcula year_diff
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
 
-
 promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
 promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
 
@@ -260,7 +259,7 @@ Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temp
 
 ```{r ej71, include=FALSE}
 df_avg_hasta_2010 <- df_avg[df_avg$year<2010,]
-df_avg_ts_hasta_2010 <- ts(df_avg_hasta_2010$avg_TG, start = c(min(df_avg_hasta_2010$year), min(df_avg_hasta_2010$month)), end = c(max(df_avg_hasta_2010$year), max(df_avg_hasta_2010$month)), frequency = 36)
+df_avg_ts_hasta_2010 <- ts(df_avg_hasta_2010$avg_TG, start = c(min(df_avg_hasta_2010$year), 25), end = c(max(df_avg_hasta_2010$year), 36), frequency = 36)
 df_avg_ts_clean_hasta_2010 <- na_seasplit(df_avg_ts_hasta_2010)
 serie_desc_hasta_2010 <- decompose(df_avg_ts_clean_hasta_2010)
 
