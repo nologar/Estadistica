@@ -1,14 +1,14 @@
 ---
 title: "Trabajo Series Temporales"
 author:
-- false
+- Noé López García
 - Joan Pedro Bruixola
 - Carlos Ribes Garcia
 - Marc Velasco Mateu
-date: "2024-11-13"
+date: "2024-12-19"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}

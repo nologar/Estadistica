@@ -1,12 +1,14 @@
 ---
 title: "Trabajo Inferencia Estadistica"
-output: html_document
-date: "2024-11-13"
 author:
-  - Noé López garcía
-  - Joan Pedro Bruixola
-  - Carlos Ribes Garcia
-  - Marc Velasco Mateu
+- Noé López García
+- Joan Pedro Bruixola
+- Carlos Ribes Garcia
+- Marc Velasco Mateu
+date: "2024-12-19"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -374,7 +376,7 @@ En particular, las diferencias en las medias y los intervalos reflejan caracter�
 Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
 
 ## Ejercicio 7
-**Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01 y a nivel α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).**
+**Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel $\alpha = 0.01$ y a nivel $\alpha = 0.1$)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).**
 
 Para responder a la pregunta que se plantea realizaremos un contraste de hipótesis sobre las medias de los grupos:
 $H_{0}: \mu_{1} = \mu_{2}$, $H_{1}: \mu_{1} \neq \mu_{2}$.
