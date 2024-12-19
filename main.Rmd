@@ -7,8 +7,13 @@ author:
 - Marc Velasco Mateu
 date: "2024-11-13"
 output:
+<<<<<<< HEAD
   pdf_document: default
   html_document: default
+=======
+  html_document: default
+  pdf_document: default
+>>>>>>> 7fc9a5b72d33a9b085080aa04af586a535623075
 ---
 
 ```{r setup, include=FALSE}
@@ -130,7 +135,7 @@ Al contar ahora con la media móvil y el modelo lineal podemos ver que existe un
 ```{r ej22, echo=FALSE}
 summary(modelo_lineal)
 ```
-Aquí podemos ver algunos de los parámetros más reelevantes del modelo lineal generado.
+Aquí podemos ver algunos de los parámetros más relevantes del modelo lineal generado.
 Los residuos por ejemplo nos indican que existe una gran variedad, lo que se puede deber a la tendencia al alza de las temperaturas a lo largo de los años. Además también podemos ver los parámetros estimados del modelo.
 
 ## Ejercicio 3
@@ -162,7 +167,7 @@ Como vemos aquí se observan algunos picos aislados pero por lo general el valor
 
 Primero, crearemos un nuevo DataFrame con los promedios calculados de cada periodo tal como indica el enunciado.
 
-```{r ej41, echo=FALSE}
+```{r ej41, echo=FALSE, message=FALSE, warning=FALSE}
 df_avg <- df %>% mutate(day = day(DATE), month= month(DATE), year = year(DATE), period = ifelse(day<=10,'1-10',ifelse(day<=20,'11-20','21-fin'))) %>% # Creamos nuevas columnas con el día, mes, año y los periodos de cada mes
   group_by(year,month,period) %>% # Agrupamos por año, mes y periodo
   summarise(avg_TG = mean(TG, na.rm = TRUE)) %>% # Calculamos el promedio para cada periodo
@@ -176,7 +181,7 @@ Como podemos observar, hay muchos registros que tienen en la columna 'avg_TG' el
 A continuación, creamos una serie regular usando los promedios calculados. Como tenemos tres periodos por mes y cada año tiene doce meses tendremos una serie con frecuencia fija 36.
 
 ```{r ej42, echo=FALSE}
-df_avg_ts <- ts(df_avg$avg_TG, start = c(min(df_avg$year), min(df_avg$month)), frequency = 36)
+df_avg_ts <- ts(df_avg$avg_TG, start = c(min(df_avg$year), 25), frequency = 36)
 
 plot(df_avg_ts, main = "Serie Temporal Promediada", ylab = "Temperatura Media Promediada", xlab = "Tiempo")
 ```
@@ -219,7 +224,7 @@ plot(serie_desc$trend, main = "Tendencia de la serie temporal", ylab = "Tendenci
 Se puede observar que la serie tiene una clara tendencia creciente.
 
 ## Ejercicio 6
-**¿Hay evidencia del cambio climático en estas observaciones? Es decir, ¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la informaci´on obtenida hasta ahora y, eventualmente, utilizando otros métodos.**
+**¿Hay evidencia del cambio climático en estas observaciones? Es decir, ¿parece haber un calentamiento a lo largo del tiempo? Responder analizando la información obtenida hasta ahora y, eventualmente, utilizando otros métodos.**
 
 ```{r ej61, echo=FALSE}
 # Graficar la tendencia
@@ -230,7 +235,6 @@ Con el gráfico de la tendencia podemos observar el efecto del cambio climático
 
 Adicionalmente, podemos constatar este cambio de los 10 primeros años con respecto a los 10 últimos comparando los valores de temperatura media en ambos casos:
 
-<<<<<<< HEAD
 ```{r ej62, echo=FALSE}
 df_clean$year<-as.numeric(df_clean$year)
 # Calcular la diferencia entre años
@@ -240,7 +244,6 @@ df_clean <- df_clean %>% mutate(year_diff = year - min_year) # Calcula year_diff
 # Promedio de temperatura en los primeros y últimos 10 años
 primeros_10 <- df_clean %>% filter(year_diff <= 10)
 ultimos_10 <- df_clean %>% filter(year_diff >= (max(df_clean$year_diff) - 10))
-
 
 promedio_primero <- mean(primeros_10$TG, na.rm = TRUE)
 promedio_ultimo <- mean(ultimos_10$TG, na.rm = TRUE)
@@ -259,9 +262,9 @@ El modelo más simple que pueda considerarse se basa en descomponer la serie tem
 
 Para aprovechar el trabajo previo, trabajaremos directamente sobre la serie temporal que calcula las medias en intervalos de ~10 días, reutilizamos el código para calcular la nueva descomposición teniendo en cuenta solo la información hasta el año 2010:
 
-```{r ej71, echo=FALSE}
+```{r ej71, include=FALSE}
 df_avg_hasta_2010 <- df_avg[df_avg$year<2010,]
-df_avg_ts_hasta_2010 <- ts(df_avg_hasta_2010$avg_TG, start = c(min(df_avg_hasta_2010$year), min(df_avg_hasta_2010$month)), end = c(max(df_avg_hasta_2010$year), max(df_avg_hasta_2010$month)), frequency = 36)
+df_avg_ts_hasta_2010 <- ts(df_avg_hasta_2010$avg_TG, start = c(min(df_avg_hasta_2010$year), 25), end = c(max(df_avg_hasta_2010$year), 36), frequency = 36)
 df_avg_ts_clean_hasta_2010 <- na_seasplit(df_avg_ts_hasta_2010)
 serie_desc_hasta_2010 <- decompose(df_avg_ts_clean_hasta_2010)
 
@@ -474,8 +477,8 @@ Efectivamente este modelo para predecir el ruido parece mejor que el anterior.
 
 Con lo que nuestra predicción final queda como
 
-```{r ej7213, echo=FALSE}
-plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")+
+```{r ej7213, echo=FALSE, message=FALSE, warning=FALSE}
+plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009, trend_guess_desde_2009)
 ```
 
