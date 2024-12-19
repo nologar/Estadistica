@@ -25,7 +25,8 @@ library(tidyr)
 data<-quakes
 ```
 
-1. Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de $GM(2,1,5,1,0.3)$. Puedes usar la función incorporada `dnorm` para la función de densidad de probabilidad de la distribución gaussiana.
+## Ejercicio 1
+**Implementa una función en R para la función de densidad de probabilidad de la distribución de mezcla gaussiana. Grafica la función de densidad de probabilidad de $GM(2,1,5,1,0.3)$. Puedes usar la función incorporada `dnorm` para la función de densidad de probabilidad de la distribución gaussiana.**
 
 Implementamos la densidad de la siguiente forma:
 
@@ -51,11 +52,12 @@ plot(x, densidad, type = "l", col = "blue", lwd = 2,
      xlab = "x", ylab = "Densidad")
 ```
 
-2.Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función `optim`. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.
+## Ejercicio 2
+**Inicialmente, solo observamos los datos de longitud y asumimos que las ubicaciones de longitud son i.i.d. que siguen un modelo de mezcla gaussiana. Estima los cinco parámetros de la mezcla gaussiana utilizando los 1000 valores observados de longitud. Puedes hacer esto numéricamente en R con la función `optim`. Grafica la mezcla gaussiana ajustada sobre el histograma de los datos de longitud.**
 
-Para encontrar un buen punto inicial para los parámetros, simplemente puedes observar el histograma de los datos y tratar de adivinar la ubicación de las medias $\mu_1$ y $\mu_2$. Una suposición inicial para $w$ puede ser la proporción del tamaño de los dos grupos de datos (o usar $w=0.5$ como suposición inicial). También puedes probar diferentes valores iniciales y reportar los resultados con la menor log-verosimilitud negativa.
+**Para encontrar un buen punto inicial para los parámetros, simplemente puedes observar el histograma de los datos y tratar de adivinar la ubicación de las medias $\mu_1$ y $\mu_2$. Una suposición inicial para $w$ puede ser la proporción del tamaño de los dos grupos de datos (o usar $w=0.5$ como suposición inicial). También puedes probar diferentes valores iniciales y reportar los resultados con la menor log-verosimilitud negativa.**
 
-Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con `control = list(maxit = 10000)` en la función `optim`. Probablemente también habrá muchos *warnings*, principalmente porque los parámetros deben estar restringidos, especialmente $w$. Puedes ignorar los *warnings*.
+**Dado que hay muchos parámetros, la optimización puede llevar mucho tiempo y es probable que debas aumentar el número máximo de iteraciones del algoritmo; de lo contrario, este terminará antes de alcanzar un buen óptimo. Puedes hacerlo con `control = list(maxit = 10000)` en la función `optim`. Probablemente también habrá muchos *warnings*, principalmente porque los parámetros deben estar restringidos, especialmente $w$. Puedes ignorar los *warnings*.**
 
 Antes de empezar a buscar los parámetros, representemos el histograma de la variable longitud para encontrar un buen valor inicial para nuestra búsqueda de parámetros.
 
@@ -117,7 +119,8 @@ title(main = title)
 
 Claramente, nuestra estimación era correcta, y los datos se ajustan perfectamente a esta distribución.
 
-3.Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana $N(\mu,\sigma^2)$. Ajusta este modelo a los datos observados de longitud.
+## Ejercicio 3
+**Considera ahora otro modelo en el que las ubicaciones de longitud son independientes y distribuidas de manera gaussiana $N(\mu,\sigma^2)$. Ajusta este modelo a los datos observados de longitud.**
 
 Como valores iniciales, escogemos la media y la desviación típica de nuestras observaciones, que en este caso son $179.462$ y $6.066461$.
 
@@ -167,7 +170,8 @@ title(main = title)
 
 Es obvio que no podemos asumir que nuestros datos siguen una distribución normal, pues el ajuste es pésimo.
 
-4.Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?
+## Ejercicio 4
+**Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?**
 
 ```{r}
 # Definimos las funciones para calcular el AIC y BIC a partir de las logverosimilitudes
@@ -179,7 +183,6 @@ BICfromL <- function(x, params, LogLike){
 }
 
 #AIC y BIC del modelo gaussiano simple:
-
 AICsimple <- AICfromL(data$long, params = resultado2$par, log_verosimilitud2)
 BICsimple <- BICfromL(data$long, params = resultado2$par, log_verosimilitud2)
 
@@ -190,12 +193,11 @@ AICponderado <- AICfromL(data$long, params = resultado$par, log_verosimilitud)
 BICponderado <- BICfromL(data$long, params = resultado$par, log_verosimilitud)
 
 cat('\n\nResultados de los criterios AIC y BIC para el modelo ponderado: \nAIC:', AICponderado,'\nBIC:', BICponderado)
-
-
 ```
 Con lo que se tiene que ambos criterios se decantan por el modelo ponderado ante el modelo simple.
 
-5.Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?
+## Ejercicio 5
+**Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?**
 
 En primer lugar hacemos el estudio de latitud:
 ```{r}
@@ -226,9 +228,10 @@ AIC_lat_pond <- AICfromL(data$lat, params = resultado_lat_pond$par, log_verosimi
 BIC_lat_pond <- BICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
 
 cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_lat_pond,'\nBIC:', BIC_lat_pond)
-
 ```
+
 Y a continuación de la profundidad:
+
 ```{r}
 resultado_prof_simple <- optim(
   par = c(mean(data$depth), sd(data$depth)),
@@ -266,9 +269,8 @@ ggplot(data = data)+
   geom_histogram( aes(x = depth, y = ..density..) )+
   geom_line( aes( x = depth, y = densidadobtenidadepth), linewidth = 1, col = "red")+
   geom_line( aes( x = depth,y = dnorm(depth, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
-
 ```
-<<<<<<< HEAD
+
 En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC. Y esto puede desconcertar un poco en vista del aspecto de la gráfica anterior, pero tenemos que tener en cuenta que las funciones de densidad gaussianas tienen soporte infinito, y por tanto, si visualzamos un poco más del eje X:
 
 ```{r}
@@ -277,12 +279,12 @@ ggplot()+
   geom_line( aes( x = Xaxis, y = densidadobtenidaX), linewidth = 1, col = "red")+
   geom_line( aes( x = Xaxis,y = dnorm(Xaxis, resultado_prof_simple$par[1],resultado_prof_simple$par[2])), linewidth = 1, col = "blue")
 ```
+
 Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de valores de 'depth', con lo que no es extraño que se priorice un modelo con 3 parámetros menos.
 
+## Ejercicio 6
+**Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?**
 
-
-
-6.Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?
 ```{r ej6, message=FALSE, warning=FALSE,echo=FALSE}
 data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
@@ -329,6 +331,7 @@ colnames(resultados_plate) <- c("Media", "Valor inferior", "Valor superior")  # 
 ```
 
 Empleando la distinción del archivo quakes_plot se ha separado el dataframe en los datos corresponientes a la Tonga y a unión de las placas. Primeramente, se muestran los resultados obtenidos para los datos correspondientes a la Tonga.
+
 ```{r ej6 2 , message=FALSE, warning=FALSE,echo=FALSE}
 # Mostrar resultados
 # Resultados de Tonga
@@ -336,6 +339,7 @@ print(resultados_tonga)
 ```
 
 Ahora se muestran los resultados para la unión de las placas.
+
 ```{r ej6 3, message=FALSE, warning=FALSE,echo=FALSE}
 #Resultados para Plate junction
 print(resultados_plate)
@@ -353,26 +357,21 @@ En particular, las diferencias en las medias y los intervalos reflejan caracter�
 
 Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
 
-
-7.Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01 y a nivel α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).
-
+## Ejercicio 7
+**Consideramos ahora la variable número de estaciones sísmicas que detectaron el evento (stations). ¿Podemos afirmar que el número medio de estaciones que detectaron los eventos es significativamente distinto en los dos grupos de terremotos (a nivel 𝛼=0.01 y a nivel α=0.1)? (Puedes utilizar bootstrap y/o asumir poblaciones normales).**
 
 Para responder a la pregunta que se plantea realizaremos un contraste de hipótesis sobre las medias de los grupos:
 $H_{0}: \mu_{1} = \mu_{2}$, $H_{1}: \mu_{1} \neq \mu_{2}$.
 
-
 ```{r}
-
 # Dividir los datos en dos grupos según la magnitud
 grupo1 <- data$stations[data$class == "Tonga trench"]
 grupo2 <- data$stations[data$class == "Plate junction"]
-
 ```
 
 El contraste lo podríamos resolver mediante un test t-student bilateral, pero primero tenemos que estudiar si las poblaciones son aproximadamente normales. Primero, haremos un histograma y veremos si las distribuciones parecen normales:
 
 ```{r}
-
 par(mfrow = c(1, 2)) 
 
 # Histograma para el grupo "Tonga trench"
@@ -392,22 +391,18 @@ hist(grupo2,
      xlab = "Stations", 
      probability = TRUE)
 lines(density(grupo2), col = "darkgreen", lwd = 2)
-
 ```
+
 Observamos que los histogramas nos muestran una distribución de los datos que no parece normal. Para confirmarlo, hacemos un test shapiro-wilk:
 
 ```{r}
-
 shapiro.test(grupo1) # para el grupo Tonga trench
 shapiro.test(grupo2) # para el grupo Plate junction
-
 ```
 
 Por tanto, podemos confirmar que los grupos no siguen una distribución normal. Esto implica que no podemos asumir normalidad, y por tanto no podemos aplicar un test t-student. Por eso, utilizaremos una técnica bootstrap. Lo que haremos es hacer intervalos de confianzaa niveles 99% y 90% para las diferencias de las medias de muestras generadas con bootstrap y veremos si el 0 está. Es decir, estamos resolviendo el contraste: $H_{0}: \mu_{1} - \mu_{2} = 0$, $H_{1}: \mu_{1} - \mu_{2} \neq 0$.
 
-
 ```{r}
-
 set.seed(123) # Para reproducibilidad
 
 # Crear una función para calcular la diferencia de medias
@@ -442,11 +437,6 @@ if (ci_90[1] > 0 || ci_90[2] < 0) {
 } else {
   cat("No podemos rechazar H0 al nivel de significancia 0.1\n")
 }
-
-
 ```
 
 Es decir, con un nivel de significancia de 0.01 no tenemos evidencia suficiente para decir que las medias de los grupos no son iguales. En cambio, para un nivel de 0.1 si que tenemos evidencia estadística suficiente para afirmar que las medias de los grupos son distintas.
-
-
-
