@@ -173,7 +173,7 @@ Es obvio que no podemos asumir que nuestros datos siguen una distribución norma
 ## Ejercicio 4
 **Calcula los valores de AIC y BIC para el modelo gaussiano simple y el modelo de mezcla gaussiana para los datos de longitud. ¿Qué modelo debería seleccionarse?**
 
-```{r, ej4.1}
+```{r ej4.1, echo=FALSE}
 # Definimos las funciones para calcular el AIC y BIC a partir de las logverosimilitudes
 AICfromL <- function(x, params, LogLike){
   return(  2*length(params) + 2*LogLike(params,x) ) #Sumamos en vez de restar porque las LogVerosimilitudes las hemos cambiado de signo
@@ -186,20 +186,21 @@ BICfromL <- function(x, params, LogLike){
 AICsimple <- AICfromL(data$long, params = resultado2$par, log_verosimilitud2)
 BICsimple <- BICfromL(data$long, params = resultado2$par, log_verosimilitud2)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo simple: \nAIC:', AICsimple,'\nBIC:', BICsimple)
+cat('Resultados de los criterios AIC y BIC para el modelo simple: \nAIC:', AICsimple,'\nBIC:', BICsimple)
 
 #AIC y BIC del modelo gaussiano ponderado:
 AICponderado <- AICfromL(data$long, params = resultado$par, log_verosimilitud)
 BICponderado <- BICfromL(data$long, params = resultado$par, log_verosimilitud)
 
-cat('\n\nResultados de los criterios AIC y BIC para el modelo ponderado: \nAIC:', AICponderado,'\nBIC:', BICponderado)
+cat('Resultados de los criterios AIC y BIC para el modelo ponderado: \nAIC:', AICponderado,'\nBIC:', BICponderado)
 ```
-Con lo que se tiene que ambos criterios se decantan por el modelo ponderado ante el modelo simple.
+Como vemos, ambos criterios se decantan por el modelo ponderado ante el modelo simple.
 
 ## Ejercicio 5
 **Repite el procedimiento de ajuste anterior para los datos de latitud y profundidad, y realiza la selección de modelos como de costumbre utilizando AIC y BIC. ¿Qué modelo debería seleccionarse?**
 
 En primer lugar hacemos el estudio de latitud:
+
 ```{r ej5.1, echo = FALSE, warning=FALSE}
 resultado_lat_simple <- optim(
   par = c(mean(data$lat), sd(data$lat)),
@@ -222,12 +223,12 @@ resultado_lat_pond <- optim(
 AIC_lat_simple <- AICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 BIC_lat_simple <- BICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a latitud son: \nAIC:', AIC_lat_simple,'\nBIC:', BIC_lat_simple)
+cat('Resultados de los criterios AIC y BIC para el modelo simple aplicado a latitud son: \nAIC:', AIC_lat_simple,'\nBIC:', BIC_lat_simple)
 
 AIC_lat_pond <- AICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
 BIC_lat_pond <- BICfromL(data$lat, params = resultado_lat_pond$par, log_verosimilitud)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_lat_pond,'\nBIC:', BIC_lat_pond)
+cat('Resultados de los criterios AIC y BIC para el modelo ponderado aplicado a latitud son: \nAIC:', AIC_lat_pond,'\nBIC:', BIC_lat_pond)
 
 densidadobtenidalat  <- densidadmg( data$lat, resultado_lat_pond$par[1], resultado_lat_pond$par[2], resultado_lat_pond$par[3], resultado_lat_pond$par[4], resultado_lat_pond$par[5] )
 
@@ -236,15 +237,18 @@ ggplot(data = data)+
   geom_line( aes( x = lat, y = densidadobtenidalat), linewidth = 1, col = "red")+
   geom_line( aes( x = lat,y = dnorm(lat, resultado_lat_simple$par[1],resultado_lat_simple$par[2])), linewidth = 1, col = "blue")
 ```
-Vemos que los modelos són prácticamente idénticos, y esto lo podemos esto es porque el modelo de mezcla ha considerado solo una gaussiana ( el parámetro peso es 0.99)
-```{r}
-resultado_lat_pond$par
+
+Vemos que los modelos són prácticamente idénticos, lo que se debe a que el modelo de mezcla ha considerado prácticamente solo una gaussiana:
+
+```{r ej5.2, echo=FALSE}
+cat("Parámetro peso estimado:",resultado_lat_pond$par[5])
 ```
-y por esto tiene sentido que el modelo simple, que tiene menos parámetros salga beneficiado del criterio AIC/BIC.
 
-Y a continuación de la profundidad:
+Es por este motivo que el modelo simple, que tiene menos parámetros, salga beneficiado del criterio AIC/BIC.
 
-```{r ej5.2,echo=FALSE, warning = FALSE}
+Hacemos ahora un estudio de la distribución de la profundidad:
+
+```{r ej5.3,echo=FALSE, warning = FALSE}
 resultado_prof_simple <- optim(
   par = c(mean(data$depth), sd(data$depth)),
   fn = log_verosimilitud2,
@@ -266,12 +270,12 @@ resultado_prof_pond <- optim(
 AIC_prof_simple <- AICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 BIC_prof_simple <- BICfromL(data$lat, params = resultado_lat_simple$par, log_verosimilitud2)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo simple aplicado a profundidad son: \nAIC:', AIC_prof_simple,'\nBIC:', BIC_prof_simple)
+cat('Resultados de los criterios AIC y BIC para el modelo simple aplicado a profundidad son: \nAIC:', AIC_prof_simple,'\nBIC:', BIC_prof_simple)
 
 AIC_prof_pond <- AICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 BIC_prof_pond <- BICfromL(data$lat, params = resultado_prof_pond$par, log_verosimilitud)
 
-cat('\nResultados de los criterios AIC y BIC para el modelo ponderado aplicado a profundidad son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond, '\n\n')
+cat('Resultados de los criterios AIC y BIC para el modelo ponderado aplicado a profundidad son: \nAIC:', AIC_prof_pond,'\nBIC:', BIC_prof_pond)
 
 Xaxis <- seq(-200,800, by = 1)
 densidadobtenidaX <- densidadmg( Xaxis, resultado_prof_pond$par[1], resultado_prof_pond$par[2], resultado_prof_pond$par[3], resultado_prof_pond$par[4], resultado_prof_pond$par[5] )
@@ -285,7 +289,7 @@ ggplot(data = data)+
 
 En este caso vemos que el modelo simple nos da mejores resultados tanto para el criterio AIC como para el BIC. Y esto puede desconcertar un poco en vista del aspecto de la gráfica anterior, pero tenemos que tener en cuenta que las funciones de densidad gaussianas tienen soporte infinito, y por tanto, si visualzamos un poco más del eje X:
 
-```{r ej5.3, echo=FALSE}
+```{r ej5.4, echo=FALSE}
 ggplot()+
   geom_histogram( data = data, aes(x = depth, y = ..density..) , binwidth = 10)+
   geom_line( aes( x = Xaxis, y = densidadobtenidaX), linewidth = 1, col = "red")+
@@ -295,9 +299,9 @@ ggplot()+
 Nos damos cuenta de que ambos modelos fallan en estos puntos fuera del rango de valores de 'depth', con lo que no es extraño que se priorice un modelo con 3 parámetros menos.
 
 ## Ejercicio 6
-**Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95 %) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?**
+**Considera los dos grupos de eventos y calcula el valor medio e intervalos de confianza (95%) para la media de las longitudes, latitudes y profundidades en los dos grupos (azul y rojo en la Figura 1). ¿Qué conclusiones podemos sacar de los intervalos de confianza?**
 
-```{r ej6, message=FALSE, warning=FALSE,echo=FALSE}
+```{r ej6.1, message=FALSE, warning=FALSE,echo=FALSE}
 data$class <- ifelse(data$long > 175, "Tonga trench", "Plate junction")
 
 # Separamos en un dataset por evento
@@ -344,7 +348,7 @@ colnames(resultados_plate) <- c("Media", "Valor inferior", "Valor superior")  # 
 
 Empleando la distinción del archivo quakes_plot se ha separado el dataframe en los datos corresponientes a la Tonga y a unión de las placas. Primeramente, se muestran los resultados obtenidos para los datos correspondientes a la Tonga.
 
-```{r ej6 2 , message=FALSE, warning=FALSE,echo=FALSE}
+```{r ej6.2 , message=FALSE, warning=FALSE,echo=FALSE}
 # Mostrar resultados
 # Resultados de Tonga
 print(resultados_tonga)
@@ -352,7 +356,7 @@ print(resultados_tonga)
 
 Ahora se muestran los resultados para la unión de las placas.
 
-```{r ej6 3, message=FALSE, warning=FALSE,echo=FALSE}
+```{r ej6.3, message=FALSE, warning=FALSE,echo=FALSE}
 #Resultados para Plate junction
 print(resultados_plate)
 ```
@@ -361,11 +365,11 @@ Finalmente, como vemos los intervalos de confianza nos permiten estimar el rango
 
 En particular, las diferencias en las medias y los intervalos reflejan características claramente distintas:
 
--En longitud, los eventos del grupo Tonga trench se encuentran en regiones más al este, mientras que Plate junction está más al oeste. Esto es coherente con lo que se ve claramente en el mapa que se nos proporciona en la práctica.
+* En longitud, los eventos del grupo Tonga trench se encuentran en regiones más al este, mientras que Plate junction está más al oeste. Esto es coherente con lo que se ve claramente en el mapa que se nos proporciona en la práctica.
 
--En latitud, los eventos de Tonga trench están ubicados en su mayoría más al sur, en comparación con Plate junction.
+* En latitud, los eventos de Tonga trench están ubicados en su mayoría más al sur, en comparación con Plate junction.
 
--En profundidad, los eventos de Tonga trench se producen a mayores profundidades, lo que es consistente pues se trata de una fosa , mientras que los eventos de Plate junction ocurren en zonas más superficiales.
+* En profundidad, los eventos de Tonga trench se producen a mayores profundidades, lo que es consistente pues se trata de una fosa , mientras que los eventos de Plate junction ocurren en zonas más superficiales.
 
 Estos resultados muestran que nos encontramos ante dos fenómenos claramente distintos.
 
@@ -375,7 +379,7 @@ Estos resultados muestran que nos encontramos ante dos fenómenos claramente dis
 Para responder a la pregunta que se plantea realizaremos un contraste de hipótesis sobre las medias de los grupos:
 $H_{0}: \mu_{1} = \mu_{2}$, $H_{1}: \mu_{1} \neq \mu_{2}$.
 
-```{r}
+```{r ej7.1, echo=FALSE}
 # Dividir los datos en dos grupos según la magnitud
 grupo1 <- data$stations[data$class == "Tonga trench"]
 grupo2 <- data$stations[data$class == "Plate junction"]
@@ -383,7 +387,7 @@ grupo2 <- data$stations[data$class == "Plate junction"]
 
 El contraste lo podríamos resolver mediante un test t-student bilateral, pero primero tenemos que estudiar si las poblaciones son aproximadamente normales. Primero, haremos un histograma y veremos si las distribuciones parecen normales:
 
-```{r}
+```{r ej7.2, echo=FALSE}
 par(mfrow = c(1, 2)) 
 
 # Histograma para el grupo "Tonga trench"
@@ -407,14 +411,14 @@ lines(density(grupo2), col = "darkgreen", lwd = 2)
 
 Observamos que los histogramas nos muestran una distribución de los datos que no parece normal. Para confirmarlo, hacemos un test shapiro-wilk:
 
-```{r}
+```{r ej7.3, echo=FALSE}
 shapiro.test(grupo1) # para el grupo Tonga trench
 shapiro.test(grupo2) # para el grupo Plate junction
 ```
 
 Por tanto, podemos confirmar que los grupos no siguen una distribución normal. Esto implica que no podemos asumir normalidad, y por tanto no podemos aplicar un test t-student. Por eso, utilizaremos una técnica bootstrap. Lo que haremos es hacer intervalos de confianzaa niveles 99% y 90% para las diferencias de las medias de muestras generadas con bootstrap y veremos si el 0 está. Es decir, estamos resolviendo el contraste: $H_{0}: \mu_{1} - \mu_{2} = 0$, $H_{1}: \mu_{1} - \mu_{2} \neq 0$.
 
-```{r}
+```{r ej7.4, echo=FALSE}
 set.seed(123) # Para reproducibilidad
 
 # Crear una función para calcular la diferencia de medias

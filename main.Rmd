@@ -7,9 +7,8 @@ author:
 - Marc Velasco Mateu
 date: "2024-11-13"
 output:
-  pdf_document: default
   html_document: default
-
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -478,7 +477,8 @@ Con lo que en caso de preferir una predición con ruido, nuestra predicción fin
 plot(time_desde_2009 ,ts_guess_2_desde_2009_con_random_2 , type = "l", main= "Predicción con ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009, trend_guess_desde_2009)
 ```
-en caso de querer una más conservadora, simplemente obviariamos el ruido, quedando como:
+en caso de querer una más conservadora, simplemente obviaríamos el ruido, quedando como:
+
 ```{r ej7214, echo=FALSE, message=FALSE, warning=FALSE}
 plot(time_desde_2009 ,ts_guess_2_desde_2009 , type = "l", main= "Predicción sin ruido",xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
 lines(time_desde_2009, trend_guess_desde_2009)
@@ -496,9 +496,10 @@ x <- as.numeric(df_hasta_2010$time)
 y <- as.numeric(df_hasta_2010$trend)
 mt <- lm(y ~ x)
 
-#Creamos dos vectores de tiempo
+#Creamos tres vectores de tiempo
 time_desde_2009_hasta_2030 <- seq(2009, 2031-1/36, by = 1/36)
 time_desde_2009_hasta_2024 <- seq(2009, 2024-1/36, by = 1/36)
+time_corecto <- time(df_avg_ts_clean)[which(time(df_avg_ts_clean) == 2009 ): length(df_avg_ts_clean)]
 
 #Predecimos los nuevos valores de trend
 new_data <- data.frame(x = time_desde_2009_hasta_2030)
@@ -508,13 +509,13 @@ trend_guess_desde_2009_hasta_2030 <- predict(mt, newdata = new_data, interval = 
 seasonal_guess_2_desde_2009_hasta_2030 <- rep(season_anual_2, times=22)[1: length(time_desde_2009_hasta_2030)]
 ts_guess_2_desde_2009_hasta_2030 <- trend_guess_desde_2009_hasta_2030 + seasonal_guess_2_desde_2009_hasta_2030
 ts_guess_2_completo <- ts_guess_2_desde_2009_hasta_2030[,1]
-ts_guess_2_completo[1:length(time_desde_2009_hasta_2024)] <- rep(NA,length(time_desde_2009_hasta_2024))
+ts_guess_2_completo[1:length(time_corecto)] <- rep(NA,length(time_corecto))
 
-ts_original_desde_2009_hasta_2024 <- df_avg_ts_clean[which(time(df_avg_ts_clean)  == 2009 ): length(df_avg_ts_clean)]
+ts_original_desde_2009_hasta_2024 <- df_avg_ts_clean[which(time(df_avg_ts_clean) == 2009 ): length(df_avg_ts_clean)]
 
 #Representamos la predicción junto con el valor original
 plot(time_desde_2009_hasta_2030, ts_guess_2_completo, type = "l", main = "", col = "blue", xlab = "Tiempo", ylab = "Temperatura (Cº/10)")
-lines(seq(2009, 2024 + 2/36, by = 1/36)  ,ts_original_desde_2009_hasta_2024, col = "red")
+lines(time_corecto, ts_original_desde_2009_hasta_2024, col = "red")
 legend( "topleft", legend= c("Predicción", "Original"), col = c("blue", "red"), lty = 1)
 ```
 
