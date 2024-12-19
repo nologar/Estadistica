@@ -1,12 +1,14 @@
 ---
 title: "Trabajo Series Temporales"
-output: html_document
-date: "2024-11-13"
 author:
-  - Noé López garcía
-  - Joan Pedro Bruixola
-  - Carlos Ribes Garcia
-  - Marc Velasco Mateu
+- false
+- Joan Pedro Bruixola
+- Carlos Ribes Garcia
+- Marc Velasco Mateu
+date: "2024-11-13"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -288,7 +290,7 @@ Hacemos notar que si tenemos en cuenta únicamente la información hasta 2010, e
 ```{r ej73, echo=FALSE}
 print(   c(min(time(serie_desc_hasta_2010$trend)), max(time(serie_desc_hasta_2010$trend))   ))
 ```
-es decir, el modelo requiere de información previa de almenos un año y posterior de almenos 0.7 años para tener información en un punto. Estudiando más de cerca los series de trend, seasonal y random podemos ver que al principio y final de estos vectores hay 18 NAs y por tanto el modelo requiere de $36 + 18 = 54$ entradas previas y de $ (1-0.306)*36 + 18 \approx 60$ entradas posteriores para calcular el valor de la descomposición en un punto. Ahora que ya podemos tener esto en cuenta procedemos ahora con el estudio previamente explicado: 
+es decir, el modelo requiere de información previa de almenos un año y posterior de almenos 0.7 años para tener información en un punto. Estudiando más de cerca los series de trend, seasonal y random podemos ver que al principio y final de estos vectores hay 18 NAs y por tanto el modelo requiere de $36 + 18 = 54$ entradas previas y de $(1-0.306)*36 + 18 \approx 60$ entradas posteriores para calcular el valor de la descomposición en un punto. Ahora que ya podemos tener esto en cuenta procedemos ahora con el estudio previamente explicado: 
 
 ### 1. Generamos un modelo lineal para la tendencia:
 
